@@ -13,7 +13,7 @@
         <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-200/20 rounded-full blur-2xl"></div>
       </div>
-      
+
       <!-- 主要内容 -->
       <div class="relative z-10 container mx-auto px-6 h-full flex items-center">
         <div class="w-full my-grid lg:grid-cols-2 gap-12 items-center">
@@ -35,7 +35,7 @@
                 基于深度学习的高精度汉字识别技术，支持多种字体、多种场景的实时图像文本检测，为您提供专业可靠的识别服务
               </p>
             </motion.div>
-            
+
             <motion.div
               :initial="{ opacity: 0, y: 30 }"
               :animate="{ opacity: 1, y: 0 }"
@@ -71,7 +71,7 @@
               </d-button>
             </motion.div>
           </div>
-          
+
           <!-- 右侧演示区域 -->
           <motion.div
             :initial="{ opacity: 0, scale: 0.9, rotateY: 15 }"
@@ -82,7 +82,7 @@
             <div class="relative">
               <!-- 装饰性背景 -->
               <div class="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl"></div>
-              
+
               <!-- 主要上传区域 -->
               <div class="relative w-96 h-96 lg:w-[450px] lg:h-[400px] bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl overflow-hidden border border-white/50">
                 <ReceiveFiles
@@ -92,7 +92,7 @@
                   @file-selected="handleFileSelected"
                 />
               </div>
-              
+
               <!-- 浮动装饰元素 -->
               <div class="absolute -top-6 -right-6 w-12 h-12 bg-blue-500/20 rounded-full animate-pulse"></div>
               <div class="absolute -bottom-4 -left-4 w-8 h-8 bg-purple-500/20 rounded-full animate-pulse" style="animation-delay: 1s"></div>
@@ -100,7 +100,7 @@
           </motion.div>
         </div>
       </div>
-      
+
       <!-- 滚动提示 -->
       <motion.div
         :initial="{ opacity: 0, y: 20 }"
@@ -132,7 +132,7 @@
           <h2 class="text-4xl font-bold text-gray-800 mb-4">系统功能特性</h2>
           <p class="text-xl text-gray-600 max-w-2xl mx-auto">先进的AI技术为您提供精准、快速、可靠的汉字识别服务</p>
         </motion.div>
-        
+
         <div class="my-grid my-grid-cols-1 md:my-grid-cols-3 my-grid-gap-8">
           <motion.div
             v-for="(feature, index) in features"
@@ -178,7 +178,7 @@
           <h2 class="text-4xl font-bold mb-4">使用统计</h2>
           <p class="text-xl text-gray-600">数据见证我们的专业与可靠</p>
         </motion.div>
-        
+
         <div class="my-grid my-grid-cols-1 md:my-grid-cols-4 my-grid-gap-8">
           <motion.div
             v-for="(stat, index) in statistics"
@@ -264,7 +264,7 @@ const handleFileSelected = (file: File) => {
 // 卡片悬停效果
 .d-card {
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
   }
@@ -273,7 +273,7 @@ const handleFileSelected = (file: File) => {
 // 按钮样式增强
 .d-button {
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-1px);
   }

@@ -20,6 +20,7 @@
     "@vueuse/core": "^13.7.0",
     "axios": "^1.11.0",
     "daisyui": "^5.0.50",
+    "devui-theme": "^0.1.0",
     "echarts": "^6.0.0",
     "element-plus": "^2.10.5",
     "motion-v": "^1.7.0",
