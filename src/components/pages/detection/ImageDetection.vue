@@ -54,6 +54,17 @@
           重新上传
         </button>
       </div>
+      
+      <!-- 识别结果显示 -->
+      <DetectionResult
+        :result="detectionResult"
+        :error="detectionError"
+        :loading="isDetecting"
+        @retry="handleResultRetry"
+        @clear="handleResultClear"
+        @copy="handleResultCopy"
+        @save="handleResultSave"
+      />
     </motion.div>
   </div>
 </template>
@@ -61,12 +72,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { motion } from 'motion-v'
+import { detectImageAPI } from '@/api/user/userApi'
+import DetectionResult from '@/components/pages/detection/DetectionResult.vue'
+import type { ImageDetectResponse } from '@/types/apis/user_T'
 
 // 响应式数据
 const uploadedImage = ref<string | null>(null)
 const isDragOver = ref(false)
 const isDetecting = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+const detectionResult = ref<ImageDetectResponse['data'] | null>(null)
+const detectionError = ref<string | null>(null)
 
 // 事件定义
 const emit = defineEmits<{
@@ -143,8 +159,23 @@ const detectImage = async () => {
   if (!uploadedImage.value) return
   
   isDetecting.value = true
+  detectionError.value = null
+  detectionResult.value = null
+  
   try {
-    emit('detect', uploadedImage.value)
+    const response = await detectImageAPI({
+      image: uploadedImage.value
+    })
+    
+    if (response.success) {
+      detectionResult.value = response.data
+      emit('detect', uploadedImage.value)
+    } else {
+      detectionError.value = response.message || '识别失败'
+    }
+  } catch (error) {
+    console.error('图片识别失败:', error)
+    detectionError.value = '网络错误，请检查连接后重试'
   } finally {
     isDetecting.value = false
   }
@@ -153,7 +184,28 @@ const detectImage = async () => {
 // 重置上传
 const resetUpload = () => {
   removeImage()
+  detectionResult.value = null
+  detectionError.value = null
   emit('reset')
+}
+
+// 处理结果操作
+const handleResultRetry = () => {
+  detectImage()
+}
+
+const handleResultClear = () => {
+  detectionResult.value = null
+  detectionError.value = null
+}
+
+const handleResultCopy = (result: any) => {
+  console.log('复制结果:', result.character)
+}
+
+const handleResultSave = (result: any) => {
+  console.log('保存结果:', result)
+  // 这里可以调用保存到历史记录的API
 }
 </script>
 

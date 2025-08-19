@@ -273,8 +273,8 @@ const headerRef = ref()
 const overviewRef = ref()
 const timeRangeRef = ref()
 const chartsRef = ref()
-const cardRefs = ref([])
-const chartRefs = ref([])
+const cardRefs = ref<any[]>([])
+const chartRefs = ref<any[]>([])
 
 // 设置卡片引用
 const setCardRef = (el: any, index: number) => {

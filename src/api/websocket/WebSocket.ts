@@ -52,6 +52,8 @@ export default class WebSocketClient {
     }
 
     this.ws.onmessage = (event: MessageEvent) => {
+      console.log("收到消息", event.data);
+
       this.callbacks.onMessage?.(event.data)
     }
 
@@ -110,6 +112,8 @@ export default class WebSocketClient {
     }
 
     if (typeof data === 'object' && !(data instanceof ArrayBuffer) && !(data instanceof Blob)) {
+      console.log('发送对象消息', data)
+
       this.ws.send(JSON.stringify(data)) // 对象自动转 JSON
     } else {
       this.ws.send(data)

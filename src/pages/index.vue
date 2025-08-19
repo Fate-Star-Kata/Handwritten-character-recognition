@@ -84,11 +84,12 @@
               <div class="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl"></div>
 
               <!-- 主要上传区域 -->
-              <div class="relative w-96 h-96 lg:w-[450px] lg:h-[400px] bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl overflow-hidden border border-white/50">
+              <div class="relative w-96 h-96 lg:w-[450px] lg:h-[400px] bg-white backdrop-blur-sm shadow-2xl rounded-2xl overflow-hidden border border-white/50">
                 <ReceiveFiles
                   model="image"
                   :custom-title="'拖拽图片到此处或点击上传'"
                   :custom-desc="'支持 JPG、PNG、JPEG 格式，最大 10MB'"
+                  border-style="none"
                   @file-selected="handleFileSelected"
                 />
               </div>

@@ -23,25 +23,32 @@
             type="text"
             placeholder="搜索识别结果..."
             class="search-input"
+            @input="handleSearch"
           />
         </div>
         
         <div class="filter-controls">
-          <d-select 
+          <select 
             v-model="selectedType" 
-            placeholder="全部类型"
-            class="filter-select"
-            :options="typeOptions"
-            size="md"
-          />
+            class="select select-bordered w-full max-w-xs"
+            @change="handleFilterChange"
+          >
+            <option value="">全部类型</option>
+            <option v-for="option in typeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
           
-          <d-select 
+          <select 
             v-model="selectedTimeRange" 
-            placeholder="全部时间"
-            class="filter-select"
-            :options="timeRangeOptions"
-            size="md"
-          />
+            class="select select-bordered w-full max-w-xs"
+            @change="handleFilterChange"
+          >
+            <option value="">全部时间</option>
+            <option v-for="option in timeRangeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -52,22 +59,23 @@
           <div class="bulk-actions">
             <div class="selection-info">
               <label class="select-all">
-                <d-checkbox
-                  v-model="isAllSelected"
+                <input 
+                  type="checkbox" 
+                  class="checkbox checkbox-primary" 
+                  :checked="isAllSelected"
                   @change="toggleSelectAll"
-                >
-                  全选
-                </d-checkbox>
+                />
+                <span class="ml-2">全选</span>
               </label>
-              <span v-if="selectedItems.length > 0" class="selected-count">
-                已选择 {{ selectedItems.length }} 项
+              <span v-if="selectedItems.size > 0" class="selected-count">
+                已选择 {{ selectedItems.size }} 项
               </span>
             </div>
             
             <div class="action-buttons">
               <button
                 @click="deleteSelected"
-                :disabled="selectedItems.length === 0"
+                :disabled="selectedItems.size === 0"
                 class="delete-btn"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +86,7 @@
               
               <button
                 @click="exportSelected"
-                :disabled="selectedItems.length === 0"
+                :disabled="selectedItems.size === 0"
                 class="export-btn"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +103,7 @@
           <p>加载中...</p>
         </div>
         
-        <div v-else-if="filteredHistory.length === 0" class="empty-state">
+        <div v-else-if="historyData.length === 0" class="empty-state">
           <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -113,14 +121,16 @@
             class="history-item"
           >
             <div class="item-checkbox">
-              <d-checkbox
-                :model-value="selectedItems.includes(item.id)"
-                @update:model-value="toggleItemSelection(item.id)"
+              <input 
+                type="checkbox" 
+                class="checkbox checkbox-primary" 
+                :checked="selectedItems.has(item.id)"
+                @change="toggleItemSelection(item.id)"
               />
             </div>
             
             <div class="item-preview">
-              <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.result" class="preview-image" />
+              <img v-if="item.image_url" :src="item.image_url" :alt="item.recognized_character" class="preview-image" />
               <div v-else class="preview-placeholder">
                 <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -130,9 +140,9 @@
             
             <div class="item-content">
               <div class="item-header">
-                <h3 class="item-result">{{ item.result }}</h3>
-                <span class="item-type" :class="`type-${item.type}`">
-                  {{ getTypeLabel(item.type) }}
+                <h3 class="item-result">{{ item.recognized_character }}</h3>
+                <span class="item-type" :class="`type-${getDetectionTypeClass(item.detection_type)}`">
+                  {{ item.detection_type }}
                 </span>
               </div>
               
@@ -141,7 +151,7 @@
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  {{ formatTime(item.createdAt) }}
+                  {{ formatTime(item.detection_time) }}
                 </span>
                 
                 <span class="item-confidence" v-if="item.confidence">
@@ -150,6 +160,27 @@
                   </svg>
                   置信度: {{ (item.confidence * 100).toFixed(1) }}%
                 </span>
+                
+                <span class="item-processing-time" v-if="item.processing_time">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  处理时间: {{ (item.processing_time * 1000).toFixed(2) }}ms
+                </span>
+              </div>
+              
+              <!-- 候选字符列表 -->
+              <div v-if="item.candidates && item.candidates.length > 1" class="candidates-list">
+                <span class="candidates-label">候选字符:</span>
+                <div class="candidates">
+                  <span 
+                    v-for="(candidate, index) in item.candidates.slice(0, 3)" 
+                    :key="index"
+                    class="candidate-item"
+                  >
+                    {{ candidate.character }} ({{ (candidate.confidence * 100).toFixed(1) }}%)
+                  </span>
+                </div>
               </div>
             </div>
             
@@ -174,7 +205,7 @@
       <!-- 分页控件 -->
       <div v-if="totalPages > 1" class="pagination">
         <button
-          @click="currentPage = Math.max(1, currentPage - 1)"
+          @click="handlePageChange(Math.max(1, currentPage - 1))"
           :disabled="currentPage === 1"
           class="pagination-btn"
         >
@@ -185,11 +216,11 @@
         </button>
         
         <div class="pagination-info">
-          <span>第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
+          <span>第 {{ currentPage }} 页，共 {{ totalPages }} 页 (总计 {{ totalCount }} 条记录)</span>
         </div>
         
         <button
-          @click="currentPage = Math.min(totalPages, currentPage + 1)"
+          @click="handlePageChange(Math.min(totalPages, currentPage + 1))"
           :disabled="currentPage === totalPages"
           class="pagination-btn"
         >
@@ -206,25 +237,31 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { motion } from 'motion-v'
+import { getHistoryAPI } from '@/api/user/userApi'
+import type { HistoryQueryParams, HistoryRecord, HistoryData, HistoryResponse } from '@/types/apis/user_T'
 
-// 历史记录项接口
+// 历史记录项接口 - 基于API类型定义
 interface HistoryItem {
-  id: string
-  result: string
-  type: 'image' | 'camera' | 'handwriting'
-  imageUrl?: string
-  confidence?: number
-  createdAt: Date
+  id: number
+  character: string
+  confidence: number
+  recognition_time: string
+  image_path: string
+  session_id: string
+  type?: 'image' | 'camera' | 'handwriting' // 前端扩展字段
 }
 
 // 响应式数据
-const loading = ref(false)
+const historyData = ref<HistoryRecord[]>([])
+const selectedItems = ref<Set<number>>(new Set())
+const currentPage = ref(1)
+const pageSize = ref(10)
 const searchQuery = ref('')
 const selectedType = ref('')
 const selectedTimeRange = ref('')
-const selectedItems = ref<string[]>([])
-const currentPage = ref(1)
-const itemsPerPage = 10
+const loading = ref(false)
+const totalCount = ref(0)
+const totalPages = ref(0)
 
 // 下拉框选项
 const typeOptions = [
@@ -241,88 +278,87 @@ const timeRangeOptions = [
   { label: '本月', value: 'month' }
 ]
 
-// 模拟历史数据
-const historyData = ref<HistoryItem[]>([
-  {
-    id: '1',
-    result: '你好',
-    type: 'handwriting',
-    confidence: 0.95,
-    createdAt: new Date('2024-01-15 10:30:00')
-  },
-  {
-    id: '2',
-    result: '世界',
-    type: 'image',
-    imageUrl: '/api/placeholder/100/100',
-    confidence: 0.88,
-    createdAt: new Date('2024-01-15 09:15:00')
-  },
-  {
-    id: '3',
-    result: '测试',
-    type: 'camera',
-    confidence: 0.92,
-    createdAt: new Date('2024-01-14 16:45:00')
-  }
-])
+
 
 // 计算属性
-const filteredHistory = computed(() => {
-  let filtered = historyData.value
-  
-  // 按搜索关键词过滤
-  if (searchQuery.value) {
-    filtered = filtered.filter(item => 
-      item.result.toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
-  }
-  
-  // 按类型过滤
-  if (selectedType.value) {
-    filtered = filtered.filter(item => item.type === selectedType.value)
-  }
-  
-  // 按时间范围过滤
-  if (selectedTimeRange.value) {
-    const now = new Date()
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    
-    filtered = filtered.filter(item => {
-      const itemDate = new Date(item.createdAt)
-      
-      switch (selectedTimeRange.value) {
-        case 'today':
-          return itemDate >= startOfDay
-        case 'week':
-          const weekAgo = new Date(startOfDay.getTime() - 7 * 24 * 60 * 60 * 1000)
-          return itemDate >= weekAgo
-        case 'month':
-          const monthAgo = new Date(startOfDay.getTime() - 30 * 24 * 60 * 60 * 1000)
-          return itemDate >= monthAgo
-        default:
-          return true
-      }
-    })
-  }
-  
-  return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-})
-
-const totalPages = computed(() => Math.ceil(filteredHistory.value.length / itemsPerPage))
-
-const paginatedHistory = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredHistory.value.slice(start, end)
-})
+const paginatedHistory = computed(() => historyData.value)
 
 const isAllSelected = computed(() => {
   return paginatedHistory.value.length > 0 && 
-         paginatedHistory.value.every(item => selectedItems.value.includes(item.id))
+         paginatedHistory.value.every(item => selectedItems.value.has(item.id))
 })
 
+// 加载历史数据
+const loadHistoryData = async () => {
+  try {
+    loading.value = true
+    
+    const params: HistoryQueryParams = {
+      page: currentPage.value,
+      page_size: pageSize.value
+    }
+    
+    // 添加搜索条件
+    if (searchQuery.value.trim()) {
+      params.character = searchQuery.value.trim()
+    }
+    
+    // 添加时间范围筛选
+    if (selectedTimeRange.value) {
+      const now = new Date()
+      let startDate: Date
+      
+      switch (selectedTimeRange.value) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          break
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+          break
+        default:
+          startDate = new Date(0)
+      }
+      
+      params.start_date = startDate.toISOString().split('T')[0]
+      params.end_date = now.toISOString().split('T')[0]
+    }
+    
+    const response: HistoryResponse = await getHistoryAPI(params)
+    
+    if (response.code === 200 && response.msg) {
+      historyData.value = response.msg.records
+      totalCount.value = response.msg.pagination.total_count
+      totalPages.value = response.msg.pagination.total_pages
+      currentPage.value = response.msg.pagination.current_page
+    } else {
+      console.error('获取历史数据失败:', response.data)
+      historyData.value = []
+      totalCount.value = 0
+      totalPages.value = 0
+    }
+  } catch (error) {
+    console.error('加载历史数据时出错:', error)
+    historyData.value = []
+    totalCount.value = 0
+    totalPages.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
 // 方法
+const getDetectionTypeClass = (type: string) => {
+  const typeMap: Record<string, string> = {
+    '图片识别': 'image',
+    '手写板识别': 'handwriting', 
+    '摄像头识别': 'camera'
+  }
+  return typeMap[type] || 'image'
+}
+
 const getTypeLabel = (type: string) => {
   const labels = {
     image: '图片检测',
@@ -332,13 +368,14 @@ const getTypeLabel = (type: string) => {
   return labels[type as keyof typeof labels] || type
 }
 
-const formatTime = (date: Date) => {
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString)
   const now = new Date()
-  const diff = now.getTime() - new Date(date).getTime()
+  const diff = now.getTime() - date.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
   
   if (days === 0) {
-    return new Date(date).toLocaleTimeString('zh-CN', { 
+    return date.toLocaleTimeString('zh-CN', { 
       hour: '2-digit', 
       minute: '2-digit' 
     })
@@ -347,51 +384,52 @@ const formatTime = (date: Date) => {
   } else if (days < 7) {
     return `${days}天前`
   } else {
-    return new Date(date).toLocaleDateString('zh-CN')
+    return date.toLocaleDateString('zh-CN')
   }
 }
 
 const toggleSelectAll = () => {
   if (isAllSelected.value) {
-    selectedItems.value = selectedItems.value.filter(
-      id => !paginatedHistory.value.some(item => item.id === id)
-    )
+    paginatedHistory.value.forEach(item => {
+      selectedItems.value.delete(item.id)
+    })
   } else {
-    const currentPageIds = paginatedHistory.value.map(item => item.id)
-    selectedItems.value = [...new Set([...selectedItems.value, ...currentPageIds])]
+    paginatedHistory.value.forEach(item => {
+      selectedItems.value.add(item.id)
+    })
   }
 }
 
-const toggleItemSelection = (id: string) => {
-  const index = selectedItems.value.indexOf(id)
-  if (index > -1) {
-    selectedItems.value.splice(index, 1)
+const toggleItemSelection = (id: number) => {
+  if (selectedItems.value.has(id)) {
+    selectedItems.value.delete(id)
   } else {
-    selectedItems.value.push(id)
+    selectedItems.value.add(id)
   }
 }
 
 const deleteSelected = () => {
-  if (confirm(`确定要删除选中的 ${selectedItems.value.length} 项记录吗？`)) {
+  if (confirm(`确定要删除选中的 ${selectedItems.value.size} 项记录吗？`)) {
     historyData.value = historyData.value.filter(
-      item => !selectedItems.value.includes(item.id)
+      item => !selectedItems.value.has(item.id)
     )
-    selectedItems.value = []
+    selectedItems.value.clear()
   }
 }
 
 const exportSelected = () => {
   const selectedData = historyData.value.filter(
-    item => selectedItems.value.includes(item.id)
+    item => selectedItems.value.has(item.id)
   )
   
   const csvContent = [
-    ['识别结果', '类型', '置信度', '创建时间'],
+    ['识别结果', '类型', '置信度', '创建时间', '处理时间'],
     ...selectedData.map(item => [
-      item.result,
-      getTypeLabel(item.type),
+      item.recognized_character,
+      item.detection_type,
       item.confidence ? `${(item.confidence * 100).toFixed(1)}%` : '',
-      new Date(item.createdAt).toLocaleString('zh-CN')
+      new Date(item.detection_time).toLocaleString('zh-CN'),
+      item.processing_time ? `${(item.processing_time * 1000).toFixed(2)}ms` : ''
     ])
   ].map(row => row.join(',')).join('\n')
   
@@ -402,22 +440,38 @@ const exportSelected = () => {
   link.click()
 }
 
-const viewDetails = (item: HistoryItem) => {
+const viewDetails = (item: HistoryRecord) => {
   // 显示详情弹窗或跳转到详情页
   console.log('查看详情:', item)
 }
 
-const deleteItem = (id: string) => {
+const deleteItem = (id: number) => {
   if (confirm('确定要删除这条记录吗？')) {
     historyData.value = historyData.value.filter(item => item.id !== id)
-    selectedItems.value = selectedItems.value.filter(itemId => itemId !== id)
+    selectedItems.value.delete(id)
+    // TODO: 调用删除API
   }
+}
+
+// 监听搜索和筛选条件变化
+const handleSearch = () => {
+  currentPage.value = 1
+  loadHistoryData()
+}
+
+const handleFilterChange = () => {
+  currentPage.value = 1
+  loadHistoryData()
+}
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  loadHistoryData()
 }
 
 // 组件挂载时加载数据
 onMounted(() => {
-  // 这里可以调用API加载真实数据
-  loading.value = false
+  loadHistoryData()
 })
 </script>
 
@@ -514,50 +568,7 @@ onMounted(() => {
   align-items: stretch;
 }
 
-.filter-select {
-  min-width: 150px;
-  height: 44px;
-  
-  :deep(.devui-select__selection) {
-    height: 44px !important;
-    border-radius: 8px !important;
-    border: 1px solid #d1d5db !important;
-    transition: all 0.3s ease !important;
-    background: #f9fafb !important;
-    box-sizing: border-box !important;
-    padding: 0 !important;
-    
-    &:hover {
-      border-color: #9ca3af !important;
-      background: white !important;
-    }
-    
-    &.devui-select__selection--focus,
-    &:focus-within {
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-      background: white !important;
-    }
-  }
-  
-  :deep(.devui-select__input) {
-    height: 42px !important;
-    padding: 12px 16px !important;
-    font-size: 14px !important;
-    border: none !important;
-    background: transparent !important;
-    line-height: 18px !important;
-    box-sizing: border-box !important;
-  }
-  
-  :deep(.devui-select) {
-    height: 44px !important;
-  }
-  
-  :deep(.devui-select-arrow) {
-    color: #6b7280;
-  }
-}
+
 
 .list-header {
   padding: 1.5rem;
@@ -581,19 +592,9 @@ onMounted(() => {
 .select-all {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   cursor: pointer;
   font-weight: 600;
   color: #374151;
-  
-  :deep(.devui-checkbox) {
-    margin-right: 0.5rem;
-  }
-  
-  :deep(.devui-checkbox-label) {
-    font-weight: 600;
-    color: #374151;
-  }
 }
 
 .selected-count {
