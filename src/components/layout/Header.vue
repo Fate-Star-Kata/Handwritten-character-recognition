@@ -94,7 +94,6 @@ provide('toggleSubmenu', toggleSubmenu)
         </ul>
       </div>
       <a href="/" class="btn btn-ghost text-xl">{{ serverConfig.VITE_APP_TITLE }}</a>
-      <search />
     </div>
     <div class="navbar-center hidden lg:flex">
       <ul class="menu lg:menu-horizontal rounded-box">
