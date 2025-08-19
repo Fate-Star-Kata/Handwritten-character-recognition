@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>检测历史 - 手写汉字识别系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-pen-nib"></i>
+                <span>手写汉字识别系统</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a href="detection.html" class="nav-link">手写字检测</a>
+                </li>
+                <li class="nav-item">
+                    <a href="history.html" class="nav-link active">检测历史</a>
+                </li>
+                <li class="nav-item">
+                    <a href="statistics.html" class="nav-link">检测统计</a>
+                </li>
+                <li class="nav-item">
+                    <a href="admin/login.html" class="nav-link admin-link">管理端</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <div class="container">
+            <h1 class="page-title">检测历史</h1>
+            
+            <!-- 搜索和筛选 -->
+            <div class="history-filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="搜索识别结果...">
+                </div>
+                <div class="filter-options">
+                    <select id="typeFilter">
+                        <option value="all">全部类型</option>
+                        <option value="image">图片识别</option>
+                        <option value="video">视频识别</option>
+                        <option value="camera">摄像头识别</option>
+                        <option value="canvas">手写板识别</option>
+                    </select>
+                    <select id="dateFilter">
+                        <option value="all">全部时间</option>
+                        <option value="today">今天</option>
+                        <option value="week">本周</option>
+                        <option value="month">本月</option>
+                    </select>
+                    <button class="btn btn-secondary" id="clearFiltersBtn">
+                        <i class="fas fa-times"></i>
+                        清除筛选
+                    </button>
+                </div>
+            </div>
+
+            <!-- 历史记录列表 -->
+            <div class="history-list">
+                <div class="history-header">
+                    <div class="bulk-actions">
+                        <input type="checkbox" id="selectAll">
+                        <label for="selectAll">全选</label>
+                        <button class="btn btn-danger" id="deleteSelectedBtn" disabled>
+                            <i class="fas fa-trash"></i>
+                            删除选中
+                        </button>
+                        <button class="btn btn-info" id="exportSelectedBtn" disabled>
+                            <i class="fas fa-download"></i>
+                            导出选中
+                        </button>
+                    </div>
+                    <div class="sort-options">
+                        <label>排序:</label>
+                        <select id="sortBy">
+                            <option value="date-desc">时间(新到旧)</option>
+                            <option value="date-asc">时间(旧到新)</option>
+                            <option value="confidence-desc">置信度(高到低)</option>
+                            <option value="confidence-asc">置信度(低到高)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="history-items" id="historyItems">
+                    <!-- 历史记录项将通过JavaScript动态生成 -->
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination" id="pagination">
+                    <button class="page-btn" id="prevPageBtn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                        上一页
+                    </button>
+                    <div class="page-numbers" id="pageNumbers">
+                        <!-- 页码将通过JavaScript动态生成 -->
+                    </div>
+                    <button class="page-btn" id="nextPageBtn">
+                        下一页
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-history"></i>
+                <h3>暂无检测历史</h3>
+                <p>您还没有进行过任何检测，<a href="detection.html">立即开始检测</a></p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 详情模态框 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>检测详情</h2>
+                <button class="modal-close" id="closeDetailModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- 详情内容将通过JavaScript动态生成 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeDetailBtn">关闭</button>
+                <button class="btn btn-danger" id="deleteDetailBtn">删除</button>
+                <button class="btn btn-info" id="exportDetailBtn">导出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>手写汉字识别系统</h3>
+                    <p>基于深度学习的智能汉字识别解决方案</p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="detection.html">开始检测</a></li>
+                        <li><a href="history.html">检测历史</a></li>
+                        <li><a href="statistics.html">统计分析</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <p>邮箱: contact@handwriting.com</p>
+                    <p>电话: 400-123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 手写汉字识别系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/history.js"></script>
+</body>
+</html>

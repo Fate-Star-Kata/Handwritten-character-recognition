@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手写字检测 - 手写汉字识别系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-pen-nib"></i>
+                <span>手写汉字识别系统</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a href="detection.html" class="nav-link active">手写字检测</a>
+                </li>
+                <li class="nav-item">
+                    <a href="history.html" class="nav-link">检测历史</a>
+                </li>
+                <li class="nav-item">
+                    <a href="statistics.html" class="nav-link">检测统计</a>
+                </li>
+                <li class="nav-item">
+                    <a href="admin/login.html" class="nav-link admin-link">管理端</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <div class="container">
+            <h1 class="page-title">手写字检测</h1>
+            
+            <!-- 检测模式选择 -->
+            <div class="detection-modes">
+                <div class="mode-tabs">
+                    <button class="mode-tab active" data-mode="image">
+                        <i class="fas fa-image"></i>
+                        图片检测
+                    </button>
+                    <button class="mode-tab" data-mode="video">
+                        <i class="fas fa-video"></i>
+                        视频检测
+                    </button>
+                    <button class="mode-tab" data-mode="camera">
+                        <i class="fas fa-camera"></i>
+                        摄像头检测
+                    </button>
+                    <button class="mode-tab" data-mode="canvas">
+                        <i class="fas fa-pen"></i>
+                        手写板
+                    </button>
+                </div>
+            </div>
+
+            <!-- 图片检测模式 -->
+            <div class="detection-panel" id="imagePanel">
+                <div class="upload-area">
+                    <div class="upload-box" id="imageUpload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>点击或拖拽图片到此处</p>
+                        <p class="upload-hint">支持 JPG、PNG、GIF 格式</p>
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+                    </div>
+                    <div class="preview-area" id="imagePreview" style="display: none;">
+                        <img id="previewImage" alt="预览图片">
+                        <div class="preview-actions">
+                            <button class="btn btn-primary" id="detectImageBtn">
+                                <i class="fas fa-search"></i>
+                                开始识别
+                            </button>
+                            <button class="btn btn-secondary" id="clearImageBtn">
+                                <i class="fas fa-times"></i>
+                                清除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视频检测模式 -->
+            <div class="detection-panel" id="videoPanel" style="display: none;">
+                <div class="upload-area">
+                    <div class="upload-box" id="videoUpload">
+                        <i class="fas fa-video"></i>
+                        <p>点击或拖拽视频到此处</p>
+                        <p class="upload-hint">支持 MP4、AVI、MOV 格式</p>
+                        <input type="file" id="videoInput" accept="video/*" hidden>
+                    </div>
+                    <div class="preview-area" id="videoPreview" style="display: none;">
+                        <video id="previewVideo" controls></video>
+                        <div class="preview-actions">
+                            <button class="btn btn-primary" id="detectVideoBtn">
+                                <i class="fas fa-search"></i>
+                                开始识别
+                            </button>
+                            <button class="btn btn-secondary" id="clearVideoBtn">
+                                <i class="fas fa-times"></i>
+                                清除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 摄像头检测模式 -->
+            <div class="detection-panel" id="cameraPanel" style="display: none;">
+                <div class="camera-container">
+                    <div class="camera-view">
+                        <video id="cameraVideo" autoplay playsinline></video>
+                        <canvas id="cameraCanvas" style="display: none;"></canvas>
+                    </div>
+                    <div class="camera-controls">
+                        <button class="btn btn-primary" id="startCameraBtn">
+                            <i class="fas fa-camera"></i>
+                            启动摄像头
+                        </button>
+                        <button class="btn btn-success" id="captureBtn" style="display: none;">
+                            <i class="fas fa-camera-retro"></i>
+                            拍照识别
+                        </button>
+                        <button class="btn btn-danger" id="stopCameraBtn" style="display: none;">
+                            <i class="fas fa-stop"></i>
+                            停止摄像头
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手写板模式 -->
+            <div class="detection-panel" id="canvasPanel" style="display: none;">
+                <div class="canvas-container">
+                    <div class="canvas-tools">
+                        <button class="tool-btn" id="penTool" data-tool="pen">
+                            <i class="fas fa-pen"></i>
+                            画笔
+                        </button>
+                        <button class="tool-btn" id="eraserTool" data-tool="eraser">
+                            <i class="fas fa-eraser"></i>
+                            橡皮擦
+                        </button>
+                        <div class="tool-options">
+                            <label>笔刷大小:</label>
+                            <input type="range" id="brushSize" min="1" max="20" value="5">
+                            <span id="brushSizeValue">5</span>
+                        </div>
+                    </div>
+                    <div class="canvas-area">
+                        <canvas id="drawingCanvas" width="400" height="400"></canvas>
+                    </div>
+                    <div class="canvas-controls">
+                        <button class="btn btn-primary" id="recognizeCanvasBtn">
+                            <i class="fas fa-search"></i>
+                            识别手写字
+                        </button>
+                        <button class="btn btn-secondary" id="clearCanvasBtn">
+                            <i class="fas fa-trash"></i>
+                            清空画布
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 识别结果 -->
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h2>识别结果</h2>
+                <div class="result-content">
+                    <div class="result-main">
+                        <div class="recognized-char">
+                            <span id="resultChar">汉</span>
+                            <div class="confidence">
+                                置信度: <span id="confidence">95%</span>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <h3>候选结果</h3>
+                            <div class="candidates" id="candidates">
+                                <!-- 候选结果将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn btn-success" id="saveResultBtn">
+                            <i class="fas fa-save"></i>
+                            保存结果
+                        </button>
+                        <button class="btn btn-info" id="shareResultBtn">
+                            <i class="fas fa-share"></i>
+                            分享结果
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <p>正在识别中，请稍候...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>手写汉字识别系统</h3>
+                    <p>基于深度学习的智能汉字识别解决方案</p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="detection.html">开始检测</a></li>
+                        <li><a href="history.html">检测历史</a></li>
+                        <li><a href="statistics.html">统计分析</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <p>邮箱: contact@handwriting.com</p>
+                    <p>电话: 400-123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 手写汉字识别系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/detection.js"></script>
+</body>
+</html>
