@@ -21,9 +21,12 @@ declare module 'vue-router/auto-routes' {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/admin/': RouteRecordInfo<'/admin/', '/admin', Record<never, never>, Record<never, never>>,
     '/admin/ai/': RouteRecordInfo<'/admin/ai/', '/admin/ai', Record<never, never>, Record<never, never>>,
+    '/admin/analytics/': RouteRecordInfo<'/admin/analytics/', '/admin/analytics', Record<never, never>, Record<never, never>>,
     '/admin/Content/': RouteRecordInfo<'/admin/Content/', '/admin/Content', Record<never, never>, Record<never, never>>,
     '/admin/dashboard/': RouteRecordInfo<'/admin/dashboard/', '/admin/dashboard', Record<never, never>, Record<never, never>>,
+    '/admin/detectionManage/': RouteRecordInfo<'/admin/detectionManage/', '/admin/detectionManage', Record<never, never>, Record<never, never>>,
     '/admin/files/': RouteRecordInfo<'/admin/files/', '/admin/files', Record<never, never>, Record<never, never>>,
+    '/admin/historyManage/': RouteRecordInfo<'/admin/historyManage/', '/admin/historyManage', Record<never, never>, Record<never, never>>,
     '/admin/systemConfig/': RouteRecordInfo<'/admin/systemConfig/', '/admin/systemConfig', Record<never, never>, Record<never, never>>,
     '/admin/userManage/': RouteRecordInfo<'/admin/userManage/', '/admin/userManage', Record<never, never>, Record<never, never>>,
     '/auth/login/': RouteRecordInfo<'/auth/login/', '/auth/login', Record<never, never>, Record<never, never>>,
@@ -57,6 +60,10 @@ declare module 'vue-router/auto-routes' {
       routes: '/admin/ai/'
       views: never
     }
+    'src/pages/admin/analytics/index.vue': {
+      routes: '/admin/analytics/'
+      views: never
+    }
     'src/pages/admin/Content/index.vue': {
       routes: '/admin/Content/'
       views: never
@@ -65,8 +72,16 @@ declare module 'vue-router/auto-routes' {
       routes: '/admin/dashboard/'
       views: never
     }
+    'src/pages/admin/detectionManage/index.vue': {
+      routes: '/admin/detectionManage/'
+      views: never
+    }
     'src/pages/admin/files/index.vue': {
       routes: '/admin/files/'
+      views: never
+    }
+    'src/pages/admin/historyManage/index.vue': {
+      routes: '/admin/historyManage/'
       views: never
     }
     'src/pages/admin/systemConfig/index.vue': {

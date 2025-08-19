@@ -11,6 +11,7 @@ HZSystem-UI 是基于 Vue 3 + TypeScript + Vite + DaisyUI + Element Plus 的前�
 - **构建工具**: Vite
 - **UI 组件库**: Element Plus + DaisyUI
 - **样式**: Tailwind CSS + SCSS
+- **动画**: Motion Motion-v
 - **路由**: Vue Router 4
 - **状态管理**: Pinia
 - **国际化**: Vue I18n
