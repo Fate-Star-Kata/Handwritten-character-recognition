@@ -3,7 +3,16 @@
     class="upload-area"
     @drop.prevent="handleDrop"
     @dragover.prevent
-    style="width:100%;height:100%;"
+    @mouseenter="onMouseEnter"
+    @mouseleave="onMouseLeave"
+    :style="{
+      width: '100%',
+      height: '100%',
+      borderColor: currentBorderColor,
+      borderStyle: borderStyles.borderStyle,
+      borderWidth: borderStyles.borderWidth,
+      borderRadius: borderStyles.borderRadius
+    }"
     @click="triggerInput"
   >
     <div class="upload-content">
@@ -25,7 +34,13 @@
         ref="fileInput"
       />
       <!-- 给按钮加 .stop 修饰符，阻止冒泡 -->
-      <button class="upload-btn" @click.stop="triggerInput">选择文件</button>
+      <button 
+        class="upload-btn" 
+        :style="buttonStyles"
+        @click.stop="triggerInput"
+      >
+        {{ props.buttonText || '选择文件' }}
+      </button>
     </div>
   </div>
 </template>
@@ -42,11 +57,42 @@ interface ReceiveFilesProps {
   customIcon?: string
   customTitle?: string
   customDesc?: string
+  // 边框配置
+  borderColor?: string
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'none'
+  borderWidth?: string
+  borderRadius?: string
+  hoverBorderColor?: string
+  // 按钮配置
+  buttonColor?: string
+  buttonHoverColor?: string
+  buttonTextColor?: string
+  buttonText?: string
+  buttonRadius?: string
 }
 
 const props = defineProps<ReceiveFilesProps>()
 const emit = defineEmits(['file-selected'])
 const fileInput = ref<HTMLInputElement | null>(null)
+const isHovered = ref(false)
+
+// 当前边框颜色（支持悬停效果）
+const currentBorderColor = computed(() => {
+  if (isHovered.value && props.hoverBorderColor) {
+    return props.hoverBorderColor
+  }
+  return props.borderColor || '#3498db'
+})
+
+// 鼠标进入事件
+function onMouseEnter() {
+  isHovered.value = true
+}
+
+// 鼠标离开事件
+function onMouseLeave() {
+  isHovered.value = false
+}
 
 const presetConfig = computed(() => {
   let allowSuffix: string[] = []
@@ -103,6 +149,27 @@ const acceptText = computed(() => {
   }
   return '支持所有文件类型，文件大小不超过 10MB'
 })
+
+// 边框样式配置
+const borderStyles = computed(() => {
+  return {
+    borderColor: props.borderColor || '#3498db',
+    borderStyle: props.borderStyle || 'dashed',
+    borderWidth: props.borderWidth || '3px',
+    borderRadius: props.borderRadius || '18px'
+  }
+})
+
+// 按钮样式配置
+const buttonStyles = computed(() => {
+  return {
+    backgroundColor: props.buttonColor || '#3498db',
+    color: props.buttonTextColor || '#fff',
+    borderRadius: props.buttonRadius || '32px'
+  }
+})
+
+
 
 function validateFile(file: File) {
   const ext = file.name.split('.').pop()?.toLowerCase() || ''
@@ -163,8 +230,6 @@ function handleDrop(e: DragEvent) {
   height: 100%;
   padding: 40px;
   background: #f8f9fa;
-  border: 3px dashed #3498db;
-  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,16 +272,13 @@ function handleDrop(e: DragEvent) {
   margin-bottom: 24px;
 }
 .upload-btn {
-  background: #3498db;
-  color: #fff;
   border: none;
-  border-radius: 32px;
   padding: 12px 40px;
   font-size: 1.2rem;
   cursor: pointer;
   transition: background 0.2s;
 }
 .upload-btn:hover {
-  background: #217dbb;
+  opacity: 0.9;
 }
 </style>
