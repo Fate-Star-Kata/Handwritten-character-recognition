@@ -79,6 +79,7 @@ declare module 'vue' {
     MenuItems: typeof import('./src/components/layout/MenuItems.vue')['default']
     Navbar: typeof import('./src/components/pages/admin/navbar.vue')['default']
     NotificationItem: typeof import('./src/components/pages/admin/Content/NotificationItem.vue')['default']
+    PieChart: typeof import('./src/components/charts/PieChart.vue')['default']
     ReceiveFiles: typeof import('./src/components/common/FileUpload/ReceiveFiles.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
@@ -86,6 +87,7 @@ declare module 'vue' {
     Sidebar: typeof import('./src/components/layout/Sidebar.vue')['default']
     SwitchDark: typeof import('./src/components/icon/switchDark.vue')['default']
     ThemeSwitch: typeof import('./src/components/layout/btns/ThemeSwitch.vue')['default']
+    TrendChart: typeof import('./src/components/charts/TrendChart.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

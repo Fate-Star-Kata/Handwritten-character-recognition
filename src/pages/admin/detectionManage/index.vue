@@ -24,7 +24,7 @@
         <div class="flex flex-wrap gap-4 items-end">
           <div class="flex-1 min-w-64">
             <label class="block text-sm font-medium text-gray-700 mb-2">搜索检测记录</label>
-            <el-input v-model="params.query" placeholder="输入用户名、识别内容或文件名搜索" :prefix-icon="Search" clearable
+            <el-input v-model="params.search" placeholder="输入用户名、识别内容或文件名搜索" :prefix-icon="Search" clearable
               @keyup.enter="search" />
           </div>
           <div class="w-48">
@@ -122,16 +122,10 @@
           table-layout="auto" border>
           <el-table-column type="selection" width="55" />
           <el-table-column prop="id" label="ID" width="80" />
-          <el-table-column prop="username" label="用户" min-width="120" />
-          <el-table-column label="原始图片" min-width="120">
+          <el-table-column prop="detection_type" label="用户" min-width="120" />
+          <el-table-column prop="recognized_character" label="识别结果" min-width="150">
             <template #default="{ row }">
-              <el-image :src="row.original_image" :preview-src-list="[row.original_image]" fit="cover"
-                class="w-16 h-16 rounded cursor-pointer" preview-teleported />
-            </template>
-          </el-table-column>
-          <el-table-column prop="recognized_text" label="识别结果" min-width="150">
-            <template #default="{ row }">
-              <el-tag v-if="row.recognized_text" type="success">{{ row.recognized_text }}</el-tag>
+              <el-tag v-if="row.recognized_character" type="success">{{ row.recognized_character }}</el-tag>
               <el-tag v-else type="info">未识别</el-tag>
             </template>
           </el-table-column>
@@ -142,10 +136,10 @@
                 :stroke-width="6" />
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" min-width="100">
+          <el-table-column prop="is_correct" label="状态" min-width="100">
             <template #default="{ row }">
-              <el-tag :type="row.status === 'success' ? 'success' : row.status === 'failed' ? 'danger' : 'warning'">
-                {{ getStatusText(row.status) }}
+              <el-tag :type="row.is_correct === true ? 'success' : row.is_correct === false ? 'danger' : 'warning'">
+                {{ getStatusText(row.is_correct) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -154,15 +148,13 @@
               {{ row.processing_time }}ms
             </template>
           </el-table-column>
-          <el-table-column prop="created_at" label="检测时间" min-width="180">
+          <el-table-column prop="detection_time" label="检测时间" min-width="180">
             <template #default="{ row }">
-              {{ formatDate(row.created_at) }}
+              {{ formatDate(row.detection_time) }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" min-width="200" fixed="right">
+          <el-table-column label="操作" min-width="100" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" type="primary" @click="viewDetail(row)">详情</el-button>
-              <el-button size="small" type="warning" @click="reprocess(row.id)">重新处理</el-button>
               <el-button size="small" type="danger" @click="deleteRecord(row.id)">删除</el-button>
             </template>
           </el-table-column>
@@ -177,82 +169,7 @@
       </el-card>
     </Motion>
 
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="检测详情" width="800px" :before-close="closeDetail">
-      <div v-if="currentRecord" class="space-y-6">
-        <!-- 基本信息 -->
-        <div class="grid grid-cols-2 gap-6">
-          <div>
-            <h3 class="text-lg font-medium mb-4">基本信息</h3>
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-gray-600">检测ID:</span>
-                <span>{{ currentRecord.id }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">用户:</span>
-                <span>{{ currentRecord.username }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">状态:</span>
-                <el-tag :type="currentRecord.status === 'success' ? 'success' : 'danger'">
-                  {{ getStatusText(currentRecord.status) }}
-                </el-tag>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">处理时间:</span>
-                <span>{{ currentRecord.processing_time }}ms</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">检测时间:</span>
-                <span>{{ formatDate(currentRecord.created_at) }}</span>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h3 class="text-lg font-medium mb-4">识别结果</h3>
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-gray-600">识别文字:</span>
-                <span class="font-medium">{{ currentRecord.recognized_text || '未识别' }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">置信度:</span>
-                <span>{{ Math.round(currentRecord.confidence * 100) }}%</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">字符类型:</span>
-                <span>{{ currentRecord.character_type || '未知' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- 图片对比 -->
-        <div>
-          <h3 class="text-lg font-medium mb-4">图片信息</h3>
-          <div class="grid grid-cols-2 gap-6">
-            <div class="text-center">
-              <p class="text-gray-600 mb-2">原始图片</p>
-              <el-image :src="currentRecord.original_image" fit="contain" class="w-full h-48 border rounded"
-                :preview-src-list="[currentRecord.original_image]" preview-teleported />
-            </div>
-            <div class="text-center" v-if="currentRecord.processed_image">
-              <p class="text-gray-600 mb-2">处理后图片</p>
-              <el-image :src="currentRecord.processed_image" fit="contain" class="w-full h-48 border rounded"
-                :preview-src-list="[currentRecord.processed_image]" preview-teleported />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <el-button @click="closeDetail">关闭</el-button>
-          <el-button type="primary" @click="currentRecord?.id && reprocess(currentRecord.id)">重新处理</el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -270,6 +187,17 @@ import {
   CircleCloseFilled,
   TrendCharts
 } from '@element-plus/icons-vue'
+import {
+  getDetectionList,
+  deleteDetection,
+  batchDeleteDetections,
+  exportDetectionData
+} from '@/api/admin/history'
+import type {
+  DetectionRecord,
+  DetectionQueryParams,
+  HistoryStatistics
+} from '@/types/factory'
 
 // 动画配置
 const cardVariants = {
@@ -279,39 +207,18 @@ const cardVariants = {
   transition: { duration: 0.3 }
 }
 
-// 接口类型定义
-interface DetectionRecord {
-  id: number
-  username: string
-  original_image: string
-  processed_image?: string
-  recognized_text: string
-  confidence: number
-  status: 'success' | 'failed' | 'processing'
-  processing_time: number
-  character_type?: string
-  created_at: string
-}
-
-interface QueryParams {
-  query: string
-  status: string
-  dateRange: string[]
-  page: number
-  page_size: number
-}
+// 使用从factory导入的类型定义
 
 // 响应式数据
 const loading = ref(false)
 const list = ref<DetectionRecord[]>([])
 const total = ref(0)
 const selectedIds = ref<number[]>([])
-const detailVisible = ref(false)
-const currentRecord = ref<DetectionRecord | null>(null)
+
 
 // 查询参数
-const params = reactive<QueryParams>({
-  query: '',
+const params = reactive<DetectionQueryParams>({
+  search: '',
   status: '',
   dateRange: [],
   page: 1,
@@ -319,10 +226,11 @@ const params = reactive<QueryParams>({
 })
 
 // 统计数据
-const statistics = ref({
+const statistics = ref<HistoryStatistics>({
   total: 0,
   success: 0,
   failed: 0,
+  processing: 0,
   accuracy: 0
 })
 
@@ -330,44 +238,20 @@ const statistics = ref({
 const getList = async () => {
   try {
     loading.value = true
-    // 模拟API调用
-    const mockData = {
-      records: [
-        {
-          id: 1,
-          username: '张三',
-          original_image: '/api/images/sample1.jpg',
-          recognized_text: '学',
-          confidence: 0.95,
-          status: 'success' as const,
-          processing_time: 120,
-          character_type: '汉字',
-          created_at: '2024-01-15 10:30:00'
-        },
-        {
-          id: 2,
-          username: '李四',
-          original_image: '/api/images/sample2.jpg',
-          recognized_text: 'A',
-          confidence: 0.88,
-          status: 'success' as const,
-          processing_time: 95,
-          character_type: '字母',
-          created_at: '2024-01-15 09:45:00'
-        }
-      ],
-      total: 156,
-      statistics: {
-        total: 156,
-        success: 142,
-        failed: 14,
-        accuracy: 91.0
+    const response = await getDetectionList(params)
+    if (response.success && response.data) {
+      list.value = response.data.records || []
+      total.value = response.data.total || 0
+      // 使用API返回的统计数据
+      statistics.value = response.data.statistics || {
+        total: 0,
+        success: 0,
+        failed: 0,
+        accuracy: 0
       }
+    } else {
+      ElMessage.error(response.message || '获取检测记录失败')
     }
-
-    list.value = mockData.records
-    total.value = mockData.total
-    statistics.value = mockData.statistics
   } catch (error) {
     console.error('获取数据失败:', error)
     ElMessage.error('获取检测记录失败')
@@ -385,7 +269,7 @@ const search = () => {
 // 重置参数
 const resetParams = () => {
   Object.assign(params, {
-    query: '',
+    search: '',
     status: '',
     dateRange: [],
     page: 1,
@@ -394,34 +278,7 @@ const resetParams = () => {
   getList()
 }
 
-// 查看详情
-const viewDetail = (record: DetectionRecord) => {
-  currentRecord.value = record
-  detailVisible.value = true
-}
 
-// 关闭详情
-const closeDetail = () => {
-  detailVisible.value = false
-  currentRecord.value = null
-}
-
-// 重新处理
-const reprocess = async (id: number) => {
-  try {
-    await ElMessageBox.confirm('确定要重新处理这条记录吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-
-    // 模拟API调用
-    ElMessage.success('重新处理成功')
-    getList()
-  } catch (error) {
-    console.log('取消重新处理')
-  }
-}
 
 // 删除记录
 const deleteRecord = async (id: number) => {
@@ -432,11 +289,18 @@ const deleteRecord = async (id: number) => {
       type: 'warning'
     })
 
-    // 模拟API调用
-    ElMessage.success('删除成功')
-    getList()
+    const response = await deleteDetection(id)
+    if (response.code === 200) {
+      ElMessage.success(response.message || response.data || '删除成功')
+      getList()
+    } else {
+      ElMessage.error(response.message || response.data || '删除失败')
+    }
   } catch (error) {
-    console.log('取消删除')
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
   }
 }
 
@@ -454,18 +318,41 @@ const batchDelete = async () => {
       type: 'warning'
     })
 
-    // 模拟API调用
-    ElMessage.success('批量删除成功')
-    selectedIds.value = []
-    getList()
+    const response = await batchDeleteDetections(selectedIds.value)
+    if (response.code === 200) {
+      ElMessage.success(response.message || response.data || '批量删除成功')
+      selectedIds.value = []
+      getList()
+    } else {
+      ElMessage.error(response.message || response.data || '批量删除失败')
+    }
   } catch (error) {
-    console.log('取消批量删除')
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+      ElMessage.error('批量删除失败')
+    }
   }
 }
 
 // 导出数据
-const exportData = () => {
-  ElMessage.success('导出功能开发中...')
+const exportData = async () => {
+  try {
+    const blob = await exportDetectionData(params)
+    // 创建下载链接
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `检测记录_${new Date().toISOString().slice(0, 10)}.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败')
+  }
 }
 
 // 表格选择变化
@@ -474,13 +361,10 @@ const handleSelectionChange = (selection: DetectionRecord[]) => {
 }
 
 // 获取状态文本
-const getStatusText = (status: string) => {
-  const statusMap = {
-    success: '成功',
-    failed: '失败',
-    processing: '处理中'
-  }
-  return statusMap[status as keyof typeof statusMap] || '未知'
+const getStatusText = (isCorrect: boolean | null) => {
+  if (isCorrect === true) return '成功'
+  if (isCorrect === false) return '失败'
+  return '处理中'
 }
 
 // 格式化日期

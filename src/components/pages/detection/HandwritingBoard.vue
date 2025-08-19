@@ -1,29 +1,17 @@
 <template>
   <div class="handwriting-board-container">
-    <motion.div
-      :initial="{ opacity: 0, y: 20 }"
-      :animate="{ opacity: 1, y: 0 }"
-      :transition="{ duration: 0.6 }"
-      class="detection-card"
-    >
+    <motion.div :initial="{ opacity: 0, y: 20 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.6 }"
+      class="detection-card">
       <div class="card-header">
         <h2 class="card-title">手写板识别</h2>
         <p class="card-description">在下方画板上书写汉字进行识别</p>
       </div>
 
       <div class="canvas-container">
-        <canvas
-          ref="canvasElement"
-          @mousedown="startDrawing"
-          @mousemove="draw"
-          @mouseup="stopDrawing"
-          @mouseleave="stopDrawing"
-          @touchstart="handleTouchStart"
-          @touchmove="handleTouchMove"
-          @touchend="stopDrawing"
-          class="drawing-canvas"
-        ></canvas>
-        
+        <canvas ref="canvasElement" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
+          @mouseleave="stopDrawing" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="stopDrawing"
+          class="drawing-canvas"></canvas>
+
         <div class="canvas-overlay">
           <div class="drawing-tips">
             <p>{{ drawingTip }}</p>
@@ -34,26 +22,15 @@
       <div class="tool-bar">
         <div class="brush-controls">
           <label class="control-label">笔刷大小:</label>
-          <input
-            v-model="brushSize"
-            type="range"
-            min="2"
-            max="20"
-            class="brush-slider"
-          />
+          <input v-model="brushSize" type="range" min="2" max="20" class="brush-slider" />
           <span class="brush-size-display">{{ brushSize }}px</span>
         </div>
-        
+
         <div class="color-controls">
           <label class="control-label">颜色:</label>
           <div class="color-palette">
-            <button
-              v-for="color in colors"
-              :key="color"
-              @click="selectColor(color)"
-              :class="['color-btn', { active: selectedColor === color }]"
-              :style="{ backgroundColor: color }"
-            ></button>
+            <button v-for="color in colors" :key="color" @click="selectColor(color)"
+              :class="['color-btn', { active: selectedColor === color }]" :style="{ backgroundColor: color }"></button>
           </div>
         </div>
       </div>
@@ -61,25 +38,32 @@
       <div class="action-buttons">
         <button @click="clearCanvas" class="clear-btn">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16">
+            </path>
           </svg>
           清空画板
         </button>
-        
+
         <button @click="undoLastStroke" :disabled="strokes.length === 0" class="undo-btn">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
           </svg>
           撤销
         </button>
-        
+
         <button @click="recognizeHandwriting" :disabled="isRecognizing || strokes.length === 0" class="recognize-btn">
           <svg v-if="isRecognizing" class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
           </svg>
           <svg v-else class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+            </path>
           </svg>
           {{ isRecognizing ? '识别中...' : '开始识别' }}
         </button>
@@ -139,17 +123,17 @@ const emit = defineEmits<{
 // 初始化画布
 const initCanvas = () => {
   if (!canvasElement.value) return
-  
+
   const canvas = canvasElement.value
   const container = canvas.parentElement
-  
+
   if (container) {
     // 设置画布尺寸为容器的100%
     const rect = container.getBoundingClientRect()
     canvas.width = rect.width - 32 // 减去padding
     canvas.height = rect.height - 32 // 减去padding
   }
-  
+
   canvasContext = canvas.getContext('2d')
   if (canvasContext) {
     // 设置画布样式
@@ -163,9 +147,9 @@ const initCanvas = () => {
 // 获取鼠标/触摸位置
 const getEventPos = (event: MouseEvent | TouchEvent): Point => {
   if (!canvasElement.value) return { x: 0, y: 0 }
-  
+
   const rect = canvasElement.value.getBoundingClientRect()
-  
+
   if (event instanceof MouseEvent) {
     return {
       x: event.clientX - rect.left,
@@ -184,10 +168,10 @@ const getEventPos = (event: MouseEvent | TouchEvent): Point => {
 const startDrawing = (event: MouseEvent) => {
   event.preventDefault()
   isDrawing.value = true
-  
+
   const point = getEventPos(event)
   lastPoint = point
-  
+
   currentStroke.value = {
     points: [point],
     color: selectedColor.value,
@@ -198,20 +182,20 @@ const startDrawing = (event: MouseEvent) => {
 // 绘制
 const draw = (event: MouseEvent) => {
   if (!isDrawing.value || !canvasContext || !lastPoint || !currentStroke.value) return
-  
+
   event.preventDefault()
   const currentPoint = getEventPos(event)
-  
+
   // 绘制线条
   canvasContext.globalCompositeOperation = 'source-over'
   canvasContext.strokeStyle = selectedColor.value
   canvasContext.lineWidth = brushSize.value
-  
+
   canvasContext.beginPath()
   canvasContext.moveTo(lastPoint.x, lastPoint.y)
   canvasContext.lineTo(currentPoint.x, currentPoint.y)
   canvasContext.stroke()
-  
+
   // 记录点
   currentStroke.value.points.push(currentPoint)
   lastPoint = currentPoint
@@ -223,7 +207,7 @@ const stopDrawing = () => {
     strokes.value.push(currentStroke.value)
     currentStroke.value = null
   }
-  
+
   isDrawing.value = false
   lastPoint = null
 }
@@ -232,10 +216,10 @@ const stopDrawing = () => {
 const handleTouchStart = (event: TouchEvent) => {
   event.preventDefault()
   isDrawing.value = true
-  
+
   const point = getEventPos(event)
   lastPoint = point
-  
+
   currentStroke.value = {
     points: [point],
     color: selectedColor.value,
@@ -245,20 +229,20 @@ const handleTouchStart = (event: TouchEvent) => {
 
 const handleTouchMove = (event: TouchEvent) => {
   if (!isDrawing.value || !canvasContext || !lastPoint || !currentStroke.value) return
-  
+
   event.preventDefault()
   const currentPoint = getEventPos(event)
-  
+
   // 绘制线条
   canvasContext.globalCompositeOperation = 'source-over'
   canvasContext.strokeStyle = selectedColor.value
   canvasContext.lineWidth = brushSize.value
-  
+
   canvasContext.beginPath()
   canvasContext.moveTo(lastPoint.x, lastPoint.y)
   canvasContext.lineTo(currentPoint.x, currentPoint.y)
   canvasContext.stroke()
-  
+
   // 记录点
   currentStroke.value.points.push(currentPoint)
   lastPoint = currentPoint
@@ -272,20 +256,20 @@ const selectColor = (color: string) => {
 // 清空画布
 const clearCanvas = () => {
   if (!canvasContext || !canvasElement.value) return
-  
+
   canvasContext.fillStyle = '#ffffff'
   canvasContext.fillRect(0, 0, canvasElement.value.width, canvasElement.value.height)
-  
+
   strokes.value = []
   currentStroke.value = null
-  
+
   emit('clear')
 }
 
 // 撤销最后一笔
 const undoLastStroke = () => {
   if (strokes.value.length === 0) return
-  
+
   strokes.value.pop()
   redrawCanvas()
 }
@@ -293,24 +277,24 @@ const undoLastStroke = () => {
 // 重绘画布
 const redrawCanvas = () => {
   if (!canvasContext || !canvasElement.value) return
-  
+
   // 清空画布
   canvasContext.fillStyle = '#ffffff'
   canvasContext.fillRect(0, 0, canvasElement.value.width, canvasElement.value.height)
-  
+
   // 重绘所有笔画
   strokes.value.forEach(stroke => {
     if (stroke.points.length < 2) return
-    
+
     canvasContext!.strokeStyle = stroke.color
     canvasContext!.lineWidth = stroke.size
     canvasContext!.beginPath()
-    
+
     canvasContext!.moveTo(stroke.points[0].x, stroke.points[0].y)
     for (let i = 1; i < stroke.points.length; i++) {
       canvasContext!.lineTo(stroke.points[i].x, stroke.points[i].y)
     }
-    
+
     canvasContext!.stroke()
   })
 }
@@ -318,9 +302,9 @@ const redrawCanvas = () => {
 // 识别手写字
 const recognizeHandwriting = async () => {
   if (!canvasElement.value || strokes.value.length === 0) return
-  
+
   isRecognizing.value = true
-  
+
   try {
     // 将画布内容转换为图片数据
     const imageData = canvasElement.value.toDataURL('image/png')
@@ -405,7 +389,7 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
   height: 100%;
-  
+
   &:hover {
     border-color: #3b82f6;
   }
@@ -426,7 +410,7 @@ onUnmounted(() => {
   border-radius: 0.5rem;
   font-size: 0.9rem;
   text-align: center;
-  
+
   p {
     margin: 0;
   }
@@ -461,7 +445,7 @@ onUnmounted(() => {
   border-radius: 3px;
   background: #e5e7eb;
   outline: none;
-  
+
   &::-webkit-slider-thumb {
     appearance: none;
     width: 20px;
@@ -471,7 +455,7 @@ onUnmounted(() => {
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
-  
+
   &::-moz-range-thumb {
     width: 20px;
     height: 20px;
@@ -507,11 +491,11 @@ onUnmounted(() => {
   border: 3px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: scale(1.1);
   }
-  
+
   &.active {
     border-color: #3b82f6;
     transform: scale(1.15);
@@ -539,7 +523,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     background: #dc2626;
     transform: translateY(-2px);
@@ -560,13 +544,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover:not(:disabled) {
     background: #d97706;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -587,12 +571,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   min-width: 120px;
-  
+
   &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
   }
-  
+
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
@@ -603,33 +587,33 @@ onUnmounted(() => {
   .detection-card {
     padding: 1.5rem;
   }
-  
+
   .tool-bar {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .brush-controls,
   .color-controls {
     justify-content: center;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .clear-btn,
   .undo-btn,
   .recognize-btn {
     width: 100%;
   }
-  
+
   .canvas-container {
     height: 350px;
     min-height: 300px;
   }
-  
+
   .drawing-canvas {
     width: 100%;
     height: 100%;

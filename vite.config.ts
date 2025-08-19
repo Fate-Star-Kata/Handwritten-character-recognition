@@ -17,7 +17,7 @@ const baseConfig: UserConfig = {
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://192.168.124.3:8000',
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, ''),
       },
