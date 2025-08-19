@@ -40,7 +40,7 @@ async function refreshCaptcha(): Promise<void> {
   try {
     // 这里应该调用后端API获取验证码图片
     const response: CaptchaResponse = await getCaptCha()
-    
+
     if (response.data) {
       captchaImage.value = import.meta.env.VITE_SERVER_PATH + response.data.captcha_url
       loginForm.value.captcha_id = response.data.captcha_id
