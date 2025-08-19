@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BaseInfo: typeof import('./src/components/pages/userInfo/BaseInfo.vue')['default']
+    CameraDetection: typeof import('./src/components/pages/detection/CameraDetection.vue')['default']
     CaptchaConfig: typeof import('./src/components/pages/admin/systemConfig/CaptchaConfig.vue')['default']
     ChangePassword: typeof import('./src/components/pages/userInfo/ChangePassword.vue')['default']
     ColorThemeSwitch: typeof import('./src/components/layout/btns/ColorThemeSwitch.vue')['default']
@@ -69,7 +70,9 @@ declare module 'vue' {
     FileUpload: typeof import('./src/components/common/FileUpload/index.vue')['default']
     FileUploadModal: typeof import('./src/components/common/FileUploadModal/index.vue')['default']
     Footer: typeof import('./src/components/layout/Footer.vue')['default']
+    HandwritingBoard: typeof import('./src/components/pages/detection/HandwritingBoard.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']
+    ImageDetection: typeof import('./src/components/pages/detection/ImageDetection.vue')['default']
     LanguageSwitch: typeof import('./src/components/layout/btns/LanguageSwitch.vue')['default']
     LanguageSwitcher: typeof import('./src/components/LanguageSwitcher.vue')['default']
     Layout: typeof import('./src/components/layout/index.vue')['default']
