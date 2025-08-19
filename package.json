@@ -13,9 +13,11 @@
     "build:css": "postcss app.css -o public/output.css"
   },
   "dependencies": {
+    "@devui-design/icons": "^1.4.0",
     "@element-plus/icons-vue": "^2.3.2",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^24.2.0",
+    "@vueuse/core": "^13.7.0",
     "axios": "^1.11.0",
     "daisyui": "^5.0.50",
     "echarts": "^6.0.0",
@@ -28,6 +30,7 @@
     "unplugin-vue-router": "^0.15.0",
     "vite-plugin-vue-devtools": "^8.0.0",
     "vue": "^3.5.17",
+    "vue-devui": "^1.6.33",
     "vue-echarts": "^7.0.3",
     "vue-i18n": "11",
     "vue-router": "4"

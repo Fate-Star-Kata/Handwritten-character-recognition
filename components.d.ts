@@ -74,6 +74,7 @@ declare module 'vue' {
     MenuItems: typeof import('./src/components/layout/MenuItems.vue')['default']
     Navbar: typeof import('./src/components/pages/admin/navbar.vue')['default']
     NotificationItem: typeof import('./src/components/pages/admin/Content/NotificationItem.vue')['default']
+    ReceiveFiles: typeof import('./src/components/common/FileUpload/ReceiveFiles.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Search: typeof import('./src/components/icon/search.vue')['default']
