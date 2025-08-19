@@ -4,6 +4,8 @@ import { useElementPlusLocale } from '@/composables/useElementPlusLocale'
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
 import Layout from './components/layout/index.vue'
+import Footer from './components/pages/userInfo/footer.vue'
+
 
 // 获取 Element Plus 国际化配置
 const { elementPlusLocale } = useElementPlusLocale()
@@ -24,7 +26,9 @@ const isAdminPage = computed(() => {
 
     <!-- 其他页面使用全局Layout -->
     <Layout v-else>
-      <router-view />
+      <router-view >
+      </router-view>
+      <Footer />
     </Layout>
   </ElConfigProvider>
 </template>
