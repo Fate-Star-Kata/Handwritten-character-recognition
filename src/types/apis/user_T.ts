@@ -10,7 +10,7 @@ export interface ApiResponse<T = any> {
 
 // 图片识别相关类型
 export interface ImageDetectRequest {
-  image: string // base64编码的图片数据
+  image: File // 图片文件对象
 }
 
 export interface DetectionResult {
@@ -18,6 +18,11 @@ export interface DetectionResult {
   confidence: number
   recognition_time: string
   session_id: string
+  image_url?: string // 识别后的图片URL
+  record_id?: number // 记录ID
+  recognized_character?: string // 识别的字符（与character相同）
+  candidates?: CandidateCharacter[] // 候选字符列表
+  processing_time?: number // 处理时间（秒）
 }
 
 export type ImageDetectResponse = ApiResponse<DetectionResult>
@@ -115,6 +120,48 @@ export interface DailyStat {
   avg_confidence: number
 }
 
+// 详细统计数据项类型
+export interface DailyStatDetail {
+  date: string
+  totalDetections: number
+  successCount: number
+  avgAccuracy: number
+  maxAccuracy: number
+  minAccuracy: number
+  mainType: string
+}
+
+// 实际API返回的统计数据结构
+export interface ActualStatisticsData {
+  total_detections: number
+  avg_accuracy: number
+  daily_stats: DailyStatDetail[]
+  type_stats: {
+    detection_type: string
+    count: number
+    avg_conf: number
+  }[]
+  char_stats: {
+    recognized_character: string
+    count: number
+    avg_conf: number
+  }[]
+  history?: HistoryRecord[] // 可选字段
+  date_range: {
+    start_date: string
+    end_date: string
+    days: number
+  }
+}
+
+// 实际API响应格式
+export interface ActualStatisticsResponse {
+  code: number
+  msg: ActualStatisticsData
+  data: string
+}
+
+// 前端使用的统计数据类型
 export interface StatisticsData {
   total_recognitions: number
   avg_confidence: number
@@ -122,6 +169,17 @@ export interface StatisticsData {
   recognition_accuracy: number
   daily_stats: DailyStat[]
   character_distribution: Record<string, number>
+  type_stats?: {
+    detection_type: string
+    count: number
+    avg_conf: number
+  }[]
+  char_stats?: {
+    recognized_character: string
+    count: number
+    avg_conf: number
+  }[]
+  history?: HistoryRecord[]
 }
 
 export type StatisticsResponse = ApiResponse<StatisticsData>

@@ -6,12 +6,8 @@
 
 **请求参数**: 无
 
-**请求体**:
-```json
-{
-    "image": "<base64编码的图片数据>"
-}
-```
+**请求体**: FormData格式
+- `image`: 图片文件 (multipart/form-data)
 
 **返回体**:
 ```json
@@ -178,7 +174,7 @@
 ```json
 {
     "success": true,
-    "message": "获取统计数据成功",
+    "message": "获取统计数据成功",  
     "data": {
         "total_recognitions": 1250,
         "avg_confidence": 0.87,

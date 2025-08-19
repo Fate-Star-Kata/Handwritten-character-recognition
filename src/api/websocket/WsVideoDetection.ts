@@ -90,12 +90,12 @@ export class WsVideoDetection {
 
   // 发送视频帧进行识别
   processVideoFrame(frameData: string) {
-    console.log('发送视频帧进行识别', frameData)
+    console.log('发送视频帧进行识别')
     this.sendMessage({
-      type: 'process_video_frame',
+      type: "process_video_frame",
       frame_data: frameData,
       timestamp: new Date().toISOString()
-    })
+    });
   }
 
   // 发送消息

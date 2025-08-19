@@ -78,6 +78,7 @@ import type { ImageDetectResponse } from '@/types/apis/user_T'
 
 // 响应式数据
 const uploadedImage = ref<string | null>(null)
+const uploadedFile = ref<File | null>(null)
 const isDragOver = ref(false)
 const isDetecting = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -138,7 +139,10 @@ const processFile = (file: File) => {
     return
   }
   
-  // 读取文件
+  // 保存文件对象
+  uploadedFile.value = file
+  
+  // 读取文件用于预览
   const reader = new FileReader()
   reader.onload = (e) => {
     uploadedImage.value = e.target?.result as string
@@ -149,6 +153,7 @@ const processFile = (file: File) => {
 // 移除图片
 const removeImage = () => {
   uploadedImage.value = null
+  uploadedFile.value = null
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -156,7 +161,7 @@ const removeImage = () => {
 
 // 检测图片
 const detectImage = async () => {
-  if (!uploadedImage.value) return
+  if (!uploadedFile.value) return
   
   isDetecting.value = true
   detectionError.value = null
@@ -164,12 +169,12 @@ const detectImage = async () => {
   
   try {
     const response = await detectImageAPI({
-      image: uploadedImage.value
+      image: uploadedFile.value
     })
     
     if (response.success) {
       detectionResult.value = response.data
-      emit('detect', uploadedImage.value)
+      emit('detect', uploadedImage.value || '')
     } else {
       detectionError.value = response.message || '识别失败'
     }

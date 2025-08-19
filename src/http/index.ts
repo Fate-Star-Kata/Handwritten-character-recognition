@@ -65,6 +65,16 @@ serviceAxios.interceptors.response.use(
       throw new Error("服务器处理异常")
     }
 
+    // 转换后端响应格式为前端期望格式
+    if (data.code !== undefined && data.msg !== undefined) {
+      return {
+        success: data.code === 200,
+        message: data.msg,
+        data: data.data,
+        error_code: data.error_code
+      }
+    }
+
     return data
   },
   (error) => {

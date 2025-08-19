@@ -17,8 +17,29 @@
       </div>
 
       <div class="result-content">
-        <div class="character-display">
-          <span class="character">{{ result.character }}</span>
+        <!-- 图片显示区域 -->
+        <div class="images-container">
+          <!-- 用户上传的图片 -->
+          <div v-if="result.image_url" class="image-display">
+            <h4 class="image-title">上传的图片</h4>
+            <img 
+              :src="getFullImageUrl(result.image_url)" 
+              alt="用户上传的图片" 
+              class="result-image"
+              @error="handleImageError"
+            />
+          </div>
+          
+          <!-- 识别到的标准字符图片 -->
+          <div v-if="result.recognized_character" class="image-display">
+            <h4 class="image-title">识别结果</h4>
+            <img 
+              :src="getFullImageUrl(result.recognized_character)" 
+              alt="识别到的标准字符" 
+              class="result-image recognized-char-image"
+              @error="handleImageError"
+            />
+          </div>
         </div>
         
         <div class="result-details">
@@ -34,8 +55,8 @@
           </div>
           
           <div class="detail-item">
-            <span class="detail-label">识别时间:</span>
-            <span class="detail-value">{{ formatTime(result.recognition_time) }}</span>
+            <span class="detail-label">耗时:</span>
+            <span class="detail-value">{{ result.processing_time }}秒</span>
           </div>
           
           <div v-if="result.session_id" class="detail-item">
@@ -128,13 +149,27 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { motion } from 'motion-v'
+import type { DetectionResult } from '@/types/apis/user_T'
 
-// 定义接口
-interface DetectionResult {
-  character: string
-  confidence: number
-  recognition_time: string
-  session_id?: string
+// 获取环境变量
+const serverPath = import.meta.env.VITE_SERVER_PATH || 'http://localhost:8000/'
+
+// 获取完整的图片URL
+const getFullImageUrl = (imageUrl: string) => {
+  if (imageUrl.startsWith('http')) {
+    return imageUrl
+  }
+  // 确保serverPath以/结尾，imageUrl不以/开头
+  const basePath = serverPath.endsWith('/') ? serverPath : serverPath + '/'
+  const relativePath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl
+  return basePath + relativePath
+}
+
+// 处理图片加载错误
+const handleImageError = (event: Event) => {
+  console.error('图片加载失败:', event)
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
 }
 
 // Props
@@ -241,6 +276,47 @@ const clearError = () => {
   font-weight: 700;
   color: #1f2937;
   margin: 0;
+}
+
+.images-container {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.image-display {
+  text-align: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.image-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.result-image {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.recognized-char-image {
+  border: 2px solid #10b981;
+  background: #f0fdf4;
 }
 
 .character-display {
@@ -430,6 +506,16 @@ const clearError = () => {
   .error-card,
   .loading-card {
     padding: 1.5rem;
+  }
+  
+  .images-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .image-display {
+    max-width: 100%;
+    min-width: auto;
   }
   
   .character {

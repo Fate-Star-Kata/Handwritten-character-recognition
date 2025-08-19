@@ -1,166 +1,136 @@
 {
     "code": 200,
     "msg": {
-        "records": [
+        "total_detections": 17,
+        "avg_accuracy": 94.3,
+        "daily_stats": [
             {
-                "id": 4,
-                "detection_type": "手写板识别",
-                "recognized_character": "Img/img001-045.png",
-                "confidence": 1.0,
-                "candidates": [
-                    {
-                        "character": "Img/img001-045.png",
-                        "confidence": 0.9999721050262451,
-                        "class_id": 44
-                    },
-                    {
-                        "character": "Img/img001-046.png",
-                        "confidence": 2.5842178729362786e-05,
-                        "class_id": 45
-                    },
-                    {
-                        "character": "Img/img001-044.png",
-                        "confidence": 4.795539325641585e-07,
-                        "class_id": 43
-                    },
-                    {
-                        "character": "Img/img002-005.png",
-                        "confidence": 4.5085289457347244e-07,
-                        "class_id": 59
-                    },
-                    {
-                        "character": "Img/img001-003.png",
-                        "confidence": 4.1307578158011893e-07,
-                        "class_id": 2
-                    }
-                ],
-                "processing_time": 0.005637407302856445,
-                "detection_time": "2025-08-19 15:53:43",
-                "image_url": "/media/handwriting/canvas_b1d822c774d64f41b646b87ef9494aa1.png",
-                "is_correct": null,
-                "user_feedback": null
+                "date": "2025-08-12",
+                "totalDetections": 0,
+                "successCount": 0,
+                "avgAccuracy": 0,
+                "maxAccuracy": 0,
+                "minAccuracy": 0,
+                "mainType": "N/A"
             },
             {
-                "id": 3,
-                "detection_type": "手写板识别",
-                "recognized_character": "Img/img001-045.png",
-                "confidence": 0.9998,
-                "candidates": [
-                    {
-                        "character": "Img/img001-045.png",
-                        "confidence": 0.9997933506965637,
-                        "class_id": 44
-                    },
-                    {
-                        "character": "Img/img001-046.png",
-                        "confidence": 0.00012403873552102596,
-                        "class_id": 45
-                    },
-                    {
-                        "character": "Img/img001-022.png",
-                        "confidence": 6.295636558206752e-05,
-                        "class_id": 21
-                    },
-                    {
-                        "character": "Img/img001-003.png",
-                        "confidence": 7.0156816036615055e-06,
-                        "class_id": 2
-                    },
-                    {
-                        "character": "Img/img001-044.png",
-                        "confidence": 3.3861522297229385e-06,
-                        "class_id": 43
-                    }
-                ],
-                "processing_time": 0.01100015640258789,
-                "detection_time": "2025-08-19 15:53:32",
-                "image_url": "/media/handwriting/canvas_f33bb190d3e24b93b1d6bb96e34a7ad3.png",
-                "is_correct": null,
-                "user_feedback": null
+                "date": "2025-08-13",
+                "totalDetections": 0,
+                "successCount": 0,
+                "avgAccuracy": 0,
+                "maxAccuracy": 0,
+                "minAccuracy": 0,
+                "mainType": "N/A"
             },
             {
-                "id": 2,
-                "detection_type": "手写板识别",
-                "recognized_character": "Img/img001-045.png",
-                "confidence": 0.9998,
-                "candidates": [
-                    {
-                        "character": "Img/img001-045.png",
-                        "confidence": 0.99981290102005,
-                        "class_id": 44
-                    },
-                    {
-                        "character": "Img/img001-046.png",
-                        "confidence": 0.0001457735343137756,
-                        "class_id": 45
-                    },
-                    {
-                        "character": "Img/img002-005.png",
-                        "confidence": 1.2797602721548174e-05,
-                        "class_id": 59
-                    },
-                    {
-                        "character": "Img/img001-022.png",
-                        "confidence": 9.987373232434038e-06,
-                        "class_id": 21
-                    },
-                    {
-                        "character": "Img/img001-044.png",
-                        "confidence": 4.0237810026155785e-06,
-                        "class_id": 43
-                    }
-                ],
-                "processing_time": 0.0020422935485839844,
-                "detection_time": "2025-08-19 15:11:02",
-                "image_url": "/media/handwriting/canvas_8dad3ddf6d9a4df6a06a611ee01258b2.png",
-                "is_correct": null,
-                "user_feedback": null
+                "date": "2025-08-14",
+                "totalDetections": 0,
+                "successCount": 0,
+                "avgAccuracy": 0,
+                "maxAccuracy": 0,
+                "minAccuracy": 0,
+                "mainType": "N/A"
             },
             {
-                "id": 1,
-                "detection_type": "手写板识别",
-                "recognized_character": "Img/img001-045.png",
-                "confidence": 0.9989,
-                "candidates": [
-                    {
-                        "character": "Img/img001-045.png",
-                        "confidence": 0.9989156723022461,
-                        "class_id": 44
-                    },
-                    {
-                        "character": "Img/img001-022.png",
-                        "confidence": 0.00040430048829875886,
-                        "class_id": 21
-                    },
-                    {
-                        "character": "Img/img001-046.png",
-                        "confidence": 0.00028931329143233597,
-                        "class_id": 45
-                    },
-                    {
-                        "character": "Img/img002-005.png",
-                        "confidence": 8.201666787499562e-05,
-                        "class_id": 59
-                    },
-                    {
-                        "character": "Img/img001-002.png",
-                        "confidence": 7.933787128422409e-05,
-                        "class_id": 1
-                    }
-                ],
-                "processing_time": 0.016008377075195312,
-                "detection_time": "2025-08-19 15:10:54",
-                "image_url": "/media/handwriting/canvas_1599d2dad9ea45be877fe25782fc9af4.png",
-                "is_correct": null,
-                "user_feedback": null
+                "date": "2025-08-15",
+                "totalDetections": 0,
+                "successCount": 0,
+                "avgAccuracy": 0,
+                "maxAccuracy": 0,
+                "minAccuracy": 0,
+                "mainType": "N/A"
+            },
+            {
+                "date": "2025-08-16",
+                "totalDetections": 0,
+                "successCount": 0,
+                "avgAccuracy": 0,
+                "maxAccuracy": 0,
+                "minAccuracy": 0,
+                "mainType": "N/A"
+            },
+            {
+                "date": "2025-08-17",
+                "totalDetections": 0,
+                "successCount": 0,
+                "avgAccuracy": 0,
+                "maxAccuracy": 0,
+                "minAccuracy": 0,
+                "mainType": "N/A"
+            },
+            {
+                "date": "2025-08-18",
+                "totalDetections": 0,
+                "successCount": 0,
+                "avgAccuracy": 0,
+                "maxAccuracy": 0,
+                "minAccuracy": 0,
+                "mainType": "N/A"
             }
         ],
-        "pagination": {
-            "current_page": 1,
-            "total_pages": 1,
-            "total_count": 4,
-            "has_next": false,
-            "has_previous": false
+        "type_stats": [
+            {
+                "detection_type": "image",
+                "count": 9,
+                "avg_conf": 0.926285121705797
+            },
+            {
+                "detection_type": "canvas",
+                "count": 6,
+                "avg_conf": 0.9609152741432191
+            },
+            {
+                "detection_type": "video",
+                "count": 2,
+                "avg_conf": 0.967
+            }
+        ],
+        "char_stats": [
+            {
+                "recognized_character": "Img/img001-018.png",
+                "count": 6,
+                "avg_conf": 0.9302610158920288
+            },
+            {
+                "recognized_character": "Img/img001-045.png",
+                "count": 5,
+                "avg_conf": 0.9996983289718628
+            },
+            {
+                "recognized_character": "u",
+                "count": 1,
+                "avg_conf": 0.98
+            },
+            {
+                "recognized_character": "j",
+                "count": 1,
+                "avg_conf": 0.767
+            },
+            {
+                "recognized_character": "b",
+                "count": 1,
+                "avg_conf": 0.904
+            },
+            {
+                "recognized_character": "a",
+                "count": 1,
+                "avg_conf": 0.931
+            },
+            {
+                "recognized_character": "W",
+                "count": 1,
+                "avg_conf": 0.954
+            },
+            {
+                "recognized_character": "8",
+                "count": 1,
+                "avg_conf": 0.92
+            }
+        ],
+        "date_range": {
+            "start_date": "2025-08-12",
+            "end_date": "2025-08-19",
+            "days": 7
         }
     },
     "data": "获取成功"

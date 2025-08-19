@@ -327,7 +327,11 @@ const captureFrameForWS = () => {
     const frameData = canvas.toDataURL('image/jpeg', 0.7)
     console.log('帧数据转换完成，发送到WebSocket')
     
-    wsClient.processVideoFrame(frameData)
+    // 截取base64数据，去掉data:image/jpeg;base64,前缀
+    const base64Data = frameData.split(',')[1]
+    console.log('截取纯base64数据完成，准备发送到WebSocket')
+    
+    wsClient.processVideoFrame(base64Data)
   } catch (error) {
     console.error('捕获视频帧失败:', error)
     console.error('错误详情:', {
@@ -517,12 +521,19 @@ const captureImage = async () => {
     // 绘制当前视频帧
     context.drawImage(videoElement.value, 0, 0)
     
-    // 转换为base64图片数据
-    const imageData = canvas.toDataURL('image/jpeg', 0.8)
+    // 转换为Blob然后转为File对象
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob!)
+      }, 'image/jpeg', 0.8)
+    })
+    
+    const imageFile = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' })
+    const imageData = canvas.toDataURL('image/jpeg', 0.8) // 用于预览
     
     // 调用识别API
     const response = await detectImageAPI({
-      image: imageData
+      image: imageFile
     })
     
     if (response.success) {

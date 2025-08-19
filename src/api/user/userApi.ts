@@ -9,6 +9,7 @@ import type {
   HistoryResponse,
   StatisticsQueryParams,
   StatisticsResponse,
+  ActualStatisticsResponse,
   FeedbackRequest,
   FeedbackResponse
 } from '@/types/apis/user_T'
@@ -16,10 +17,16 @@ import serviceAxios from '@/http'
 
 // 图片识别接口
 export function detectImageAPI(data: ImageDetectRequest): Promise<ImageDetectResponse> {
+  const formData = new FormData()
+  formData.append('image', data.image)
+  
   return serviceAxios({
     url: '/handwriting/api/detect/image/',
     method: 'post',
-    data
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })
 }
 
@@ -51,7 +58,7 @@ export function getHistoryAPI(params: HistoryQueryParams): Promise<HistoryRespon
 }
 
 // 获取统计数据接口
-export function getStatisticsAPI(params: StatisticsQueryParams): Promise<StatisticsResponse> {
+export function getStatisticsAPI(params: StatisticsQueryParams): Promise<ActualStatisticsResponse> {
   return serviceAxios({
     url: '/handwriting/api/statistics/',
     method: 'get',

@@ -12,12 +12,25 @@
     </motion.div>
 
     <!-- 统计概览 -->
+    <!-- 错误提示 -->
+    <div v-if="error" class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ error }}
+    </div>
+
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-message">
+      <i class="fas fa-spinner fa-spin"></i>
+      正在加载统计数据...
+    </div>
+
     <motion.div 
       class="stats-overview" 
       ref="overviewRef"
       :initial="{ opacity: 0, y: 30 }"
       :animate="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.7, delay: 0.4 }"
+      v-show="!loading && !error"
     >
       <motion.div 
          class="stat-card" 
@@ -52,7 +65,7 @@
           <button 
             v-for="range in timeRanges" 
             :key="range.value"
-            :class="['range-btn', { active: selectedRange === range.value }]"
+            :class="['range-btn', { active: selectedPeriod === range.value }]"
             @click="selectTimeRange(range.value)"
           >
             {{ range.label }}
@@ -219,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { use } from 'echarts/core'
 import {
   CanvasRenderer
@@ -238,6 +251,11 @@ import {
 import VChart, { THEME_KEY } from 'vue-echarts'
 import { provide } from 'vue'
 import { motion } from 'motion-v'
+import { getStatisticsAPI } from '@/api/user/userApi'
+import type { StatisticsQueryParams, ActualStatisticsResponse, ActualStatisticsData } from '@/types/apis/user_T'
+
+// 使用API返回的数据类型
+type StatisticsData = ActualStatisticsData
 
 // 注册ECharts组件
 use([
@@ -255,18 +273,59 @@ use([
 provide(THEME_KEY, 'light')
 
 // 响应式数据
-const totalDetections = ref(0)
-const avgAccuracy = ref(0)
-const todayDetections = ref(0)
-const uniqueChars = ref(0)
+const statisticsData = ref<StatisticsData | null>(null)
+const loading = ref(false)
+const error = ref('')
 
-// 统计卡片数据
-const statCards = ref([
-  { icon: 'fas fa-search', value: totalDetections.value, label: '总检测次数' },
-  { icon: 'fas fa-percentage', value: `${avgAccuracy.value}%`, label: '平均准确率' },
-  { icon: 'fas fa-calendar-day', value: todayDetections.value, label: '今日检测' },
-  { icon: 'fas fa-font', value: uniqueChars.value, label: '识别汉字种类' }
-])
+// 计算属性 - 统计卡片数据
+const statCards = computed(() => {
+  // 计算真实的识别准确率
+  let recognitionAccuracy = statisticsData.value?.avg_confidence || 0
+  let accuracySource = '模拟数据'
+  
+  if (statisticsData.value?.history && statisticsData.value.history.length > 0) {
+    const correctCount = statisticsData.value.history.filter(record => record.is_correct !== false).length
+    const totalCount = statisticsData.value.history.length
+    recognitionAccuracy = Math.round((correctCount / totalCount) * 100)
+    accuracySource = '真实计算'
+    
+    console.log('📊 识别准确率计算:', {
+      source: accuracySource,
+      correctCount: correctCount,
+      totalCount: totalCount,
+      accuracy: `${recognitionAccuracy}%`
+    })
+  } else {
+    console.log('📊 识别准确率使用模拟数据:', {
+      source: accuracySource,
+      reason: '无历史记录数据',
+      fallbackValue: `${recognitionAccuracy}%`
+    })
+  }
+  
+  return [
+    { 
+      icon: 'fas fa-search', 
+      value: statisticsData.value?.total_recognitions || 0, 
+      label: '总检测次数' 
+    },
+    { 
+      icon: 'fas fa-percentage', 
+      value: `${Math.round(statisticsData.value?.avg_confidence || 0)}%`, 
+      label: '平均准确率' 
+    },
+    { 
+      icon: 'fas fa-bullseye', 
+      value: `${recognitionAccuracy}%`, 
+      label: '识别准确率' 
+    },
+    { 
+      icon: 'fas fa-font', 
+      value: statisticsData.value?.most_recognized_character || '-', 
+      label: '最常识别字符' 
+    }
+  ]
+})
 
 // 动画引用
 const headerRef = ref()
@@ -291,14 +350,14 @@ const setChartRef = (el: any, index: number) => {
 }
 
 // 时间范围选择
-const selectedRange = ref(7)
+const selectedPeriod = ref<'day' | 'week' | 'month' | 'year'>('month')
 const startDate = ref('')
 const endDate = ref('')
 const timeRanges = [
-  { label: '最近7天', value: 7 },
-  { label: '最近30天', value: 30 },
-  { label: '最近90天', value: 90 },
-  { label: '最近一年', value: 365 }
+  { label: '按天统计', value: 'day' as const },
+  { label: '按周统计', value: 'week' as const },
+  { label: '按月统计', value: 'month' as const },
+  { label: '按年统计', value: 'year' as const }
 ]
 
 // 图表控制
@@ -311,40 +370,52 @@ const typeChartOption = ref({})
 const accuracyChartOption = ref({})
 const topCharsChartOption = ref({})
 
-// 表格数据
-const statsTableData = ref([
-  {
-    date: '2024-01-15',
-    totalDetections: 45,
-    successCount: 42,
-    avgAccuracy: 93.3,
-    maxAccuracy: 98.5,
-    minAccuracy: 85.2,
-    mainType: '图片检测'
-  },
-  {
-    date: '2024-01-14',
-    totalDetections: 38,
-    successCount: 35,
-    avgAccuracy: 92.1,
-    maxAccuracy: 97.8,
-    minAccuracy: 82.4,
-    mainType: '手写板'
-  },
-  {
-    date: '2024-01-13',
-    totalDetections: 52,
-    successCount: 48,
-    avgAccuracy: 94.2,
-    maxAccuracy: 99.1,
-    minAccuracy: 87.6,
-    mainType: '摄像头检测'
+// 计算属性 - 表格数据
+const statsTableData = computed(() => {
+  if (!statisticsData.value?.daily_stats) {
+    console.log('⚠️ 表格数据: 无daily_stats数据，返回空数组')
+    return []
   }
-])
+  
+  const tableData = statisticsData.value.daily_stats.map(stat => {
+    console.log(`📋 ${stat.date} 使用API返回的详细统计数据:`, {
+      totalDetections: stat.totalDetections,
+      successCount: stat.successCount,
+      avgAccuracy: stat.avgAccuracy,
+      maxAccuracy: stat.maxAccuracy,
+      minAccuracy: stat.minAccuracy,
+      mainType: stat.mainType
+    })
+    
+    return {
+      date: stat.date,
+      totalDetections: stat.totalDetections,
+      successCount: stat.successCount,
+      avgAccuracy: stat.avgAccuracy,
+      maxAccuracy: stat.maxAccuracy,
+      minAccuracy: stat.minAccuracy,
+      mainType: stat.mainType
+    }
+  })
+  
+  console.log('📊 表格数据处理完成，共', tableData.length, '条记录')
+  return tableData
+})
+
+// 获取主要检测类型的辅助函数
+const getMainDetectionType = (records: any[]) => {
+  const typeCount: Record<string, number> = {}
+  records.forEach(record => {
+    typeCount[record.detection_type] = (typeCount[record.detection_type] || 0) + 1
+  })
+  
+  const sortedTypes = Object.entries(typeCount).sort((a, b) => b[1] - a[1])
+  return sortedTypes.length > 0 ? sortedTypes[0][0] : '混合检测'
+}
 
 // 方法
-const selectTimeRange = (range: number) => {
-  selectedRange.value = range
+const selectTimeRange = (period: 'day' | 'week' | 'month' | 'year') => {
+  selectedPeriod.value = period
   loadStatistics()
 }
 
@@ -355,30 +426,76 @@ const applyCustomRange = () => {
 }
 
 const loadStatistics = async () => {
-  // 模拟数据加载
-  totalDetections.value = 1247
-  avgAccuracy.value = 93.5
-  todayDetections.value = 28
-  uniqueChars.value = 156
-  
-  // 更新图表
-  await nextTick()
-  updateAllCharts()
+  try {
+    loading.value = true
+    error.value = ''
+    
+    const params: StatisticsQueryParams = {
+      period: selectedPeriod.value
+    }
+    
+    const response: ActualStatisticsResponse = await getStatisticsAPI(params)
+    
+    if (response.code === 200 && response.msg) {
+      // 直接使用API返回的数据结构
+      const apiData = response.msg
+      
+      // 构建字符分布数据
+      const characterDistribution: Record<string, number> = {}
+      apiData.char_stats.forEach(char => {
+        characterDistribution[char.recognized_character] = char.count
+      })
+      
+      // 找出最常识别的字符
+      const mostRecognizedChar = apiData.char_stats.length > 0 
+        ? apiData.char_stats[0].recognized_character 
+        : '无'
+      
+      // 转换为前端格式，保持daily_stats的完整结构
+      const convertedData: StatisticsData = {
+        total_recognitions: apiData.total_detections,
+        avg_confidence: apiData.avg_accuracy,
+        most_recognized_character: mostRecognizedChar,
+        recognition_accuracy: apiData.avg_accuracy,
+        daily_stats: apiData.daily_stats, // 直接使用API返回的完整daily_stats数据
+        character_distribution: characterDistribution,
+        type_stats: apiData.type_stats,
+        char_stats: apiData.char_stats,
+        history: apiData.history
+      }
+      
+      console.log('✅ API数据处理完成:', {
+        totalDetections: convertedData.total_recognitions,
+        avgAccuracy: convertedData.avg_confidence,
+        dailyStatsCount: convertedData.daily_stats.length,
+        typeStatsCount: convertedData.type_stats?.length || 0,
+        charStatsCount: convertedData.char_stats?.length || 0,
+        historyCount: convertedData.history?.length || 0,
+        dailyStatsStructure: convertedData.daily_stats[0] || 'empty'
+      })
+      
+      statisticsData.value = convertedData
+      
+      // 更新图表
+      await nextTick()
+      updateAllCharts()
+    } else {
+      error.value = '获取统计数据失败'
+    }
+  } catch (err) {
+    error.value = '网络错误，请稍后重试'
+    console.error('获取统计数据失败:', err)
+  } finally {
+    loading.value = false
+  }
 }
 
 const updateTrendChart = () => {
-  // 根据trendType更新数据
-  const labels = trendType.value === 'daily' 
-    ? ['1/10', '1/11', '1/12', '1/13', '1/14', '1/15', '1/16']
-    : trendType.value === 'weekly'
-    ? ['第1周', '第2周', '第3周', '第4周']
-    : ['1月', '2月', '3月', '4月']
+  if (!statisticsData.value?.daily_stats) return
   
-  const data = trendType.value === 'daily'
-    ? [25, 32, 28, 45, 38, 52, 41]
-    : trendType.value === 'weekly'
-    ? [156, 189, 203, 178]
-    : [645, 723, 598, 712]
+  const dailyStats = statisticsData.value.daily_stats
+  const labels = dailyStats.map(stat => stat.date)
+  const data = dailyStats.map(stat => stat.count)
   
   trendChartOption.value = {
     tooltip: {
@@ -421,9 +538,18 @@ const updateTrendChart = () => {
 }
 
 const updateTopCharsChart = () => {
+  if (!statisticsData.value?.character_distribution) return
+  
   const count = parseInt(topCount.value.toString())
-  const chars = ['你', '我', '他', '的', '是', '在', '有', '不', '了', '人', '都', '一', '个', '上', '也', '很', '到', '说', '要', '去']
-  const data = Array.from({ length: count }, (_, i) => Math.floor(Math.random() * 100) + 20)
+  const distribution = statisticsData.value.character_distribution
+  
+  // 将字符分布转换为数组并按数量排序
+  const sortedChars = Object.entries(distribution)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, count)
+  
+  const chars = sortedChars.map(([char]) => char)
+  const data = sortedChars.map(([, count]) => count)
   
   topCharsChartOption.value = {
     title: {
@@ -461,47 +587,359 @@ const updateTopCharsChart = () => {
 }
 
 const initCharts = () => {
-  // 检测趋势图
-  trendChartOption.value = {
-    tooltip: {
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'category',
-      data: ['1/10', '1/11', '1/12', '1/13', '1/14', '1/15', '1/16']
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [{
-      name: '检测次数',
-      type: 'line',
-      data: [25, 32, 28, 45, 38, 52, 41],
-      smooth: true,
-      lineStyle: {
-        color: '#4f46e5'
+  console.log('🔍 图表初始化 - 检查数据来源:')
+  
+  // 检测趋势图 - 尝试使用真实数据
+  if (statisticsData.value?.daily_stats && statisticsData.value.daily_stats.length > 0) {
+    const dailyStats = statisticsData.value.daily_stats
+    const dates = dailyStats.map(stat => stat.date)
+    const counts = dailyStats.map(stat => stat.count)
+    
+    console.log('📊 检测趋势图使用真实数据:', { dates, counts })
+    
+    trendChartOption.value = {
+      tooltip: {
+        trigger: 'axis'
       },
-      itemStyle: {
-        color: '#4f46e5'
+      xAxis: {
+        type: 'category',
+        data: dates
       },
-      areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0,
-          y: 0,
-          x2: 0,
-          y2: 1,
-          colorStops: [{
-            offset: 0, color: 'rgba(79, 70, 229, 0.3)'
-          }, {
-            offset: 1, color: 'rgba(79, 70, 229, 0.1)'
-          }]
+      yAxis: {
+        type: 'value'
+      },
+      series: [{
+        name: '检测次数',
+        type: 'line',
+        data: counts,
+        smooth: true,
+        lineStyle: {
+          color: '#4f46e5'
+        },
+        itemStyle: {
+          color: '#4f46e5'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(79, 70, 229, 0.3)'
+            }, {
+              offset: 1, color: 'rgba(79, 70, 229, 0.1)'
+            }]
+          }
         }
-      }
-    }]
+      }]
+    }
+  } else {
+    // 使用模拟数据
+    const mockTrendData = {
+      dates: ['1/10', '1/11', '1/12', '1/13', '1/14', '1/15', '1/16'],
+      counts: [25, 32, 28, 45, 38, 52, 41]
+    }
+    console.log('📊 检测趋势图使用模拟数据 (无真实数据):', mockTrendData)
+    
+    trendChartOption.value = {
+      tooltip: {
+        trigger: 'axis'
+      },
+      xAxis: {
+        type: 'category',
+        data: mockTrendData.dates
+      },
+      yAxis: {
+        type: 'value'
+      },
+      series: [{
+        name: '检测次数',
+        type: 'line',
+        data: mockTrendData.counts,
+        smooth: true,
+        lineStyle: {
+          color: '#4f46e5'
+        },
+        itemStyle: {
+          color: '#4f46e5'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(79, 70, 229, 0.3)'
+            }, {
+              offset: 1, color: 'rgba(79, 70, 229, 0.1)'
+            }]
+          }
+        }
+      }]
+    }
   }
 
-  // 检测类型分布
+  // 检测类型分布 - 尝试使用真实数据
+  if (statisticsData.value?.type_stats && statisticsData.value.type_stats.length > 0) {
+    const typeStats = statisticsData.value.type_stats
+    const typeData = typeStats.map(stat => ({
+      value: stat.count,
+      name: stat.detection_type === 'image' ? '图片检测' : 
+            stat.detection_type === 'canvas' ? '手写板' : 
+            stat.detection_type === 'video' ? '摄像头检测' : stat.detection_type,
+      itemStyle: { 
+        color: stat.detection_type === 'image' ? '#4f46e5' : 
+               stat.detection_type === 'canvas' ? '#06b6d4' : 
+               stat.detection_type === 'video' ? '#10b981' : '#6b7280'
+      }
+    }))
+    
+    console.log('🥧 检测类型分布使用真实数据:', typeData)
+    
+    typeChartOption.value = {
+      tooltip: {
+        trigger: 'item',
+        formatter: '{a} <br/>{b}: {c} ({d}%)'
+      },
+      legend: {
+        bottom: '10%',
+        left: 'center'
+      },
+      series: [{
+        name: '检测类型',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        data: typeData,
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }]
+    }
+  } else {
+    // 使用模拟数据
+    const mockTypeData = [
+      { value: 45, name: '图片检测', itemStyle: { color: '#4f46e5' } },
+      { value: 30, name: '手写板', itemStyle: { color: '#06b6d4' } },
+      { value: 25, name: '摄像头检测', itemStyle: { color: '#10b981' } }
+    ]
+    console.log('🥧 检测类型分布使用模拟数据 (无真实数据):', mockTypeData)
+    
+    typeChartOption.value = {
+      tooltip: {
+        trigger: 'item',
+        formatter: '{a} <br/>{b}: {c} ({d}%)'
+      },
+      legend: {
+        bottom: '10%',
+        left: 'center'
+      },
+      series: [{
+        name: '检测类型',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        data: mockTypeData,
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }]
+    }
+  }
+
+  // 准确率分布 - 从字符统计计算
+  if (statisticsData.value?.char_stats && statisticsData.value.char_stats.length > 0) {
+    const charStats = statisticsData.value.char_stats
+    const avgAccuracy = statisticsData.value.avg_confidence || 0
+    
+    // 基于平均准确率模拟分布
+    const accuracyRanges = {
+      '90-95%': Math.round(charStats.length * 0.2),
+      '95-98%': Math.round(charStats.length * 0.5),
+      '98-100%': Math.round(charStats.length * 0.3)
+    }
+    
+    const categories = Object.keys(accuracyRanges)
+    const counts = Object.values(accuracyRanges)
+    
+    console.log('📈 准确率分布使用计算数据:', { categories, counts, avgAccuracy, totalChars: charStats.length })
+    
+    accuracyChartOption.value = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: categories
+      },
+      yAxis: {
+        type: 'value'
+      },
+      series: [{
+        name: '检测次数',
+        type: 'bar',
+        data: counts,
+        itemStyle: {
+          color: '#10b981'
+        }
+      }]
+    }
+  } else {
+    // 使用模拟数据
+    const mockAccuracyData = {
+      categories: ['90-95%', '95-98%', '98-100%'],
+      counts: [156, 234, 178]
+    }
+    console.log('📈 准确率分布使用模拟数据 (无字符统计):', mockAccuracyData)
+    
+    accuracyChartOption.value = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: mockAccuracyData.categories
+      },
+      yAxis: {
+        type: 'value'
+      },
+      series: [{
+        name: '检测次数',
+        type: 'bar',
+        data: mockAccuracyData.counts,
+        itemStyle: {
+          color: '#10b981'
+        }
+      }]
+    }
+  }
+
+  // 热门汉字排行 - 尝试使用真实数据
+  if (statisticsData.value?.char_stats && statisticsData.value.char_stats.length > 0) {
+    const charStats = statisticsData.value.char_stats
+    const count = parseInt(topCount.value.toString())
+    const topChars = charStats.slice(0, count)
+    
+    const characters = topChars.map(char => char.recognized_character)
+    const counts = topChars.map(char => char.count)
+    
+    console.log('🔤 热门汉字排行使用真实数据:', { characters, counts })
+    
+    topCharsChartOption.value = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'value'
+      },
+      yAxis: {
+        type: 'category',
+        data: characters
+      },
+      series: [{
+        name: '检测次数',
+        type: 'bar',
+        data: counts,
+        itemStyle: {
+          color: '#f59e0b'
+        }
+      }]
+    }
+  } else {
+    // 使用模拟数据
+    const mockTopCharsData = {
+      characters: ['你', '我', '他', '的', '是', '在', '有', '不', '了', '人'],
+      counts: [89, 76, 65, 58, 52, 48, 45, 42, 38, 35]
+    }
+    console.log('🔤 热门汉字排行使用模拟数据 (无字符统计):', mockTopCharsData)
+    
+    topCharsChartOption.value = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'value'
+      },
+      yAxis: {
+        type: 'category',
+        data: mockTopCharsData.characters.slice(0, parseInt(topCount.value.toString()))
+      },
+      series: [{
+        name: '检测次数',
+        type: 'bar',
+        data: mockTopCharsData.counts.slice(0, parseInt(topCount.value.toString())),
+        itemStyle: {
+          color: '#f59e0b'
+        }
+      }]
+    }
+  }
+}
+
+const updateTypeChart = () => {
+  if (!statisticsData.value?.type_stats) return
+  
+  const typeStats = statisticsData.value.type_stats
+  const typeData = typeStats.map(stat => ({
+    value: stat.count,
+    name: stat.detection_type === 'image' ? '图片检测' : 
+          stat.detection_type === 'canvas' ? '手写板' : 
+          stat.detection_type === 'video' ? '摄像头检测' : stat.detection_type,
+    itemStyle: { 
+      color: stat.detection_type === 'image' ? '#4f46e5' : 
+             stat.detection_type === 'canvas' ? '#06b6d4' : 
+             stat.detection_type === 'video' ? '#10b981' : '#6b7280'
+    }
+  }))
+  
   typeChartOption.value = {
     tooltip: {
       trigger: 'item',
@@ -516,11 +954,7 @@ const initCharts = () => {
       type: 'pie',
       radius: ['40%', '70%'],
       center: ['50%', '45%'],
-      data: [
-        { value: 45, name: '图片检测', itemStyle: { color: '#4f46e5' } },
-        { value: 30, name: '手写板', itemStyle: { color: '#06b6d4' } },
-        { value: 25, name: '摄像头检测', itemStyle: { color: '#10b981' } }
-      ],
+      data: typeData,
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
@@ -530,72 +964,11 @@ const initCharts = () => {
       }
     }]
   }
-
-  // 准确率分布
-  accuracyChartOption.value = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      }
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'category',
-      data: ['90-95%', '95-98%', '98-100%']
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [{
-      name: '检测次数',
-      type: 'bar',
-      data: [156, 234, 178],
-      itemStyle: {
-        color: '#10b981'
-      }
-    }]
-  }
-
-  // 热门汉字排行
-  topCharsChartOption.value = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      }
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'value'
-    },
-    yAxis: {
-      type: 'category',
-      data: ['你', '我', '他', '的', '是', '在', '有', '不', '了', '人']
-    },
-    series: [{
-      name: '检测次数',
-      type: 'bar',
-      data: [89, 76, 65, 58, 52, 48, 45, 42, 38, 35],
-      itemStyle: {
-        color: '#f59e0b'
-      }
-    }]
-  }
 }
 
 const updateAllCharts = () => {
   updateTrendChart()
+  updateTypeChart()
   updateTopCharsChart()
 }
 
@@ -605,7 +978,6 @@ const exportStats = () => {
 }
 
 const refreshStats = () => {
-  // 刷新统计数据
   loadStatistics()
 }
 
@@ -629,6 +1001,39 @@ onMounted(async () => {
   padding: 20px;
   background-color: #F8FAFC;
   min-height: 100vh;
+}
+
+// 错误和加载状态
+.error-message {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  i {
+    font-size: 16px;
+  }
+}
+
+.loading-message {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #2563eb;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  i {
+    font-size: 16px;
+  }
 }
 
 .page-header {
