@@ -10,6 +10,9 @@ import DevUI from 'vue-devui'
 import 'vue-devui/style.css'
 import '@devui-design/icons/icomoon/devui-icon.css'
 
+// 导入vue-echarts
+import VChart from 'vue-echarts'
+
 // 导入i18n配置
 import i18n, { setupI18n } from '@/i18n'
 
@@ -55,6 +58,9 @@ app.use(ElementPlus)
 
 // 使用DevUI
 app.use(DevUI)
+
+// 注册VChart组件
+app.component('VChart', VChart)
 
 // 注册Element Plus图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

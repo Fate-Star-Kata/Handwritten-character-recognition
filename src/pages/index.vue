@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen" style="background-color: #F8FAFC;">
     <!-- Hero Section -->
     <motion.div
       :initial="{ opacity: 0 }"

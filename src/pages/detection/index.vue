@@ -210,7 +210,7 @@ const clearResult = () => {
 <style scoped lang="scss">
 .detection-page {
   min-height: 100vh;
-  background: #ffffff;
+  background: #F8FAFC;
   padding: 2rem;
   display: flex;
   flex-direction: column;

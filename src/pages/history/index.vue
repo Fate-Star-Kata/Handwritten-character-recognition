@@ -424,7 +424,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .history-container {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #F8FAFC;
   padding: 2rem;
 }
 
