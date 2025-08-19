@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>检测统计 - 手写汉字识别系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-pen-nib"></i>
+                <span>手写汉字识别系统</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a href="detection.html" class="nav-link">手写字检测</a>
+                </li>
+                <li class="nav-item">
+                    <a href="history.html" class="nav-link">检测历史</a>
+                </li>
+                <li class="nav-item">
+                    <a href="statistics.html" class="nav-link active">检测统计</a>
+                </li>
+                <li class="nav-item">
+                    <a href="admin/login.html" class="nav-link admin-link">管理端</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <div class="container">
+            <h1 class="page-title">检测统计</h1>
+            
+            <!-- 统计概览 -->
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalDetections">0</h3>
+                        <p>总检测次数</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="avgAccuracy">0%</h3>
+                        <p>平均准确率</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="todayDetections">0</h3>
+                        <p>今日检测</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-font"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="uniqueChars">0</h3>
+                        <p>识别汉字种类</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 时间范围选择 -->
+            <div class="time-range-selector">
+                <label>统计时间范围:</label>
+                <div class="range-buttons">
+                    <button class="range-btn active" data-range="7">最近7天</button>
+                    <button class="range-btn" data-range="30">最近30天</button>
+                    <button class="range-btn" data-range="90">最近90天</button>
+                    <button class="range-btn" data-range="365">最近一年</button>
+                </div>
+                <div class="custom-range">
+                    <input type="date" id="startDate">
+                    <span>至</span>
+                    <input type="date" id="endDate">
+                    <button class="btn btn-primary" id="applyCustomRange">应用</button>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="charts-container">
+                <!-- 检测趋势图 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>检测趋势</h3>
+                        <div class="chart-controls">
+                            <select id="trendType">
+                                <option value="daily">按天</option>
+                                <option value="weekly">按周</option>
+                                <option value="monthly">按月</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 检测类型分布 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>检测类型分布</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 准确率分布 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>准确率分布</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="accuracyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 热门汉字排行 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>热门汉字排行</h3>
+                        <div class="chart-controls">
+                            <select id="topCount">
+                                <option value="10">前10名</option>
+                                <option value="20">前20名</option>
+                                <option value="50">前50名</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="topCharsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细统计表格 -->
+            <div class="detailed-stats">
+                <div class="stats-header">
+                    <h3>详细统计数据</h3>
+                    <div class="stats-actions">
+                        <button class="btn btn-info" id="exportStatsBtn">
+                            <i class="fas fa-download"></i>
+                            导出数据
+                        </button>
+                        <button class="btn btn-secondary" id="refreshStatsBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            刷新数据
+                        </button>
+                    </div>
+                </div>
+                <div class="stats-table">
+                    <table id="statsTable">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>检测次数</th>
+                                <th>成功次数</th>
+                                <th>平均准确率</th>
+                                <th>最高准确率</th>
+                                <th>最低准确率</th>
+                                <th>主要检测类型</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTableBody">
+                            <!-- 表格数据将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>手写汉字识别系统</h3>
+                    <p>基于深度学习的智能汉字识别解决方案</p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="detection.html">开始检测</a></li>
+                        <li><a href="history.html">检测历史</a></li>
+                        <li><a href="statistics.html">统计分析</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <p>邮箱: contact@handwriting.com</p>
+                    <p>电话: 400-123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 手写汉字识别系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/statistics.js"></script>
+</body>
+</html>

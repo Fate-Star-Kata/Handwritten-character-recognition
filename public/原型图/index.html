@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手写汉字识别系统 - 首页</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-pen-nib"></i>
+                <span>手写汉字识别系统</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link active">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a href="detection.html" class="nav-link">手写字检测</a>
+                </li>
+                <li class="nav-item">
+                    <a href="history.html" class="nav-link">检测历史</a>
+                </li>
+                <li class="nav-item">
+                    <a href="statistics.html" class="nav-link">检测统计</a>
+                </li>
+                <li class="nav-item">
+                    <a href="admin/login.html" class="nav-link admin-link">管理端</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <!-- 英雄区域 -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">智能手写汉字识别系统</h1>
+                <p class="hero-subtitle">基于深度学习的高精度汉字识别技术，支持图片、视频和实时摄像头检测</p>
+                <div class="hero-buttons">
+                    <a href="detection.html" class="btn btn-primary">
+                        <i class="fas fa-camera"></i>
+                        开始检测
+                    </a>
+                    <a href="#features" class="btn btn-secondary">
+                        <i class="fas fa-info-circle"></i>
+                        了解更多
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="demo-canvas">
+                    <canvas id="demoCanvas" width="300" height="300"></canvas>
+                    <p class="demo-text">在此处手写汉字试试</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能特性 -->
+        <section id="features" class="features">
+            <div class="container">
+                <h2 class="section-title">系统功能特性</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <h3>图片识别</h3>
+                        <p>支持上传图片进行汉字识别，支持多种图片格式</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h3>视频识别</h3>
+                        <p>支持视频文件中的汉字识别，逐帧分析处理</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h3>实时识别</h3>
+                        <p>通过摄像头实时捕获并识别手写汉字</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h3>历史记录</h3>
+                        <p>保存所有识别记录，方便查看和管理</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>统计分析</h3>
+                        <p>提供详细的识别统计和准确率分析</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3>管理功能</h3>
+                        <p>完善的后台管理系统，支持用户和数据管理</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 使用统计 -->
+        <section class="stats">
+            <div class="container">
+                <h2 class="section-title">使用统计</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="1000">0</div>
+                        <div class="stat-label">总识别次数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="95">0</div>
+                        <div class="stat-label">识别准确率(%)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="500">0</div>
+                        <div class="stat-label">注册用户数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="3000">0</div>
+                        <div class="stat-label">识别汉字数</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>手写汉字识别系统</h3>
+                    <p>基于深度学习的智能汉字识别解决方案</p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="detection.html">开始检测</a></li>
+                        <li><a href="history.html">检测历史</a></li>
+                        <li><a href="statistics.html">统计分析</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <p>邮箱: contact@handwriting.com</p>
+                    <p>电话: 400-123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 手写汉字识别系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
