@@ -75,7 +75,7 @@ async function handleLogin(): Promise<void> {
     loading.value = true
     // 这里应该调用登录API
     const response: LoginResNoToken = await login(loginForm.value)
-    if (response.code === 200 && response.data) {
+    if ( response.data) {
       // localStorage.setItem('token', response.data.token)
       // localStorage.setItem('refreshToken', response.data.refreshToken)
       // localStorage.setItem('userInfo', JSON.stringify(response.data.userInfo))
