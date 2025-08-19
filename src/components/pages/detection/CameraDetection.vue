@@ -78,6 +78,18 @@
           </button>
         </template>
       </div>
+      
+      <!-- 识别结果显示 -->
+      <div v-if="detectionResult || detectionError" class="detection-results">
+        <DetectionResult
+          :result="detectionResult"
+          :error="detectionError"
+          @retry="handleResultRetry"
+          @clear="handleResultClear"
+          @copy="handleResultCopy"
+          @save="handleResultSave"
+        />
+      </div>
     </motion.div>
   </div>
 </template>
@@ -85,12 +97,17 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 import { motion } from 'motion-v'
+import { detectImageAPI } from '@/api/admin/userApi'
+import DetectionResult from '@/components/common/DetectionResult.vue'
+import type { ImageDetectResponse } from '@/types/apis/user_T'
 
 // 响应式数据
 const cameraActive = ref(false)
 const isStarting = ref(false)
 const isCapturing = ref(false)
 const videoElement = ref<HTMLVideoElement | null>(null)
+const detectionResult = ref<ImageDetectResponse['data'] | null>(null)
+const detectionError = ref<string | null>(null)
 let mediaStream: MediaStream | null = null
 
 // 事件定义
@@ -157,6 +174,8 @@ const captureImage = async () => {
   if (!videoElement.value || !cameraActive.value) return
   
   isCapturing.value = true
+  detectionError.value = null
+  detectionResult.value = null
   
   try {
     // 创建canvas来捕获视频帧
@@ -177,14 +196,42 @@ const captureImage = async () => {
     // 转换为base64图片数据
     const imageData = canvas.toDataURL('image/jpeg', 0.8)
     
-    // 发送给父组件进行识别
-    emit('capture', imageData)
+    // 调用识别API
+    const response = await detectImageAPI({
+      image: imageData
+    })
+    
+    if (response.success) {
+      detectionResult.value = response.data
+      emit('capture', imageData)
+    } else {
+      detectionError.value = response.message || '识别失败'
+    }
   } catch (error) {
-    console.error('拍照失败:', error)
-    emit('error', '拍照失败，请重试')
+    console.error('拍照识别失败:', error)
+    detectionError.value = '网络错误，请检查连接后重试'
   } finally {
     isCapturing.value = false
   }
+}
+
+// 处理结果操作
+const handleResultRetry = () => {
+  captureImage()
+}
+
+const handleResultClear = () => {
+  detectionResult.value = null
+  detectionError.value = null
+}
+
+const handleResultCopy = (result: any) => {
+  console.log('复制结果:', result.character)
+}
+
+const handleResultSave = (result: any) => {
+  console.log('保存结果:', result)
+  // 这里可以调用保存到历史记录的API
 }
 
 // 组件卸载时清理资源

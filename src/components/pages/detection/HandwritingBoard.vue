@@ -84,6 +84,19 @@
           {{ isRecognizing ? '识别中...' : '开始识别' }}
         </button>
       </div>
+      
+      <!-- 识别结果显示 -->
+      <DetectionResult
+        v-if="detectionResult || detectionError"
+        :result="detectionResult"
+        :error="detectionError"
+        :is-loading="isRecognizing"
+        @retry="handleResultRetry"
+        @clear="handleResultClear"
+        @copy="handleResultCopy"
+        @save="handleResultSave"
+        class="mt-6"
+      />
     </motion.div>
   </div>
 </template>
@@ -91,6 +104,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { motion } from 'motion-v'
+import { detectCanvasAPI } from '@/api/admin/userApi'
+import DetectionResult from '@/components/common/DetectionResult.vue'
+import type { CanvasDetectResponse } from '@/types/apis/user_T'
 
 // 画笔相关数据
 interface Point {
@@ -112,6 +128,8 @@ const brushSize = ref(8)
 const selectedColor = ref('#000000')
 const strokes = ref<Stroke[]>([])
 const currentStroke = ref<Stroke | null>(null)
+const detectionResult = ref<CanvasDetectResponse['data'] | null>(null)
+const detectionError = ref<string | null>(null)
 
 let canvasContext: CanvasRenderingContext2D | null = null
 let lastPoint: Point | null = null
@@ -278,8 +296,29 @@ const clearCanvas = () => {
   
   strokes.value = []
   currentStroke.value = null
+  detectionResult.value = null
+  detectionError.value = null
   
   emit('clear')
+}
+
+// 处理结果操作
+const handleResultRetry = () => {
+  recognizeHandwriting()
+}
+
+const handleResultClear = () => {
+  detectionResult.value = null
+  detectionError.value = null
+}
+
+const handleResultCopy = (result: any) => {
+  console.log('复制结果:', result.character)
+}
+
+const handleResultSave = (result: any) => {
+  console.log('保存结果:', result)
+  // 这里可以调用保存到历史记录的API
 }
 
 // 撤销最后一笔
@@ -320,13 +359,27 @@ const recognizeHandwriting = async () => {
   if (!canvasElement.value || strokes.value.length === 0) return
   
   isRecognizing.value = true
+  detectionError.value = null
+  detectionResult.value = null
   
   try {
     // 将画布内容转换为图片数据
     const imageData = canvasElement.value.toDataURL('image/png')
-    emit('recognize', imageData)
+    const response = await detectCanvasAPI({
+      canvas_data: imageData,
+      width: canvasElement.value.width,
+      height: canvasElement.value.height
+    })
+    
+    if (response.success) {
+      detectionResult.value = response.data
+      emit('recognize', imageData)
+    } else {
+      detectionError.value = response.message || '识别失败'
+    }
   } catch (error) {
-    console.error('识别失败:', error)
+    console.error('画布识别失败:', error)
+    detectionError.value = '网络错误，请检查连接后重试'
   } finally {
     isRecognizing.value = false
   }
