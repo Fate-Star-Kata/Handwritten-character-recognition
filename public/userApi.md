@@ -242,3 +242,101 @@
 ```
 
 ---
+
+## WebSocket实时通信接口
+
+### 1. 摄像头WebSocket接口
+
+**接口描述**: 实时摄像头视频流处理和字符识别
+
+**WebSocket路由**: `/ws/camera/`
+
+**连接建立消息**:
+```json
+{
+    "type": "connection_established",
+    "message": "摄像头连接已建立"
+}
+```
+
+**启动摄像头请求**:
+```json
+{
+    "type": "start_camera"
+}
+```
+
+**启动摄像头响应**:
+```json
+{
+    "type": "camera_started",
+    "message": "摄像头启动成功"
+}
+```
+
+**停止摄像头请求**:
+```json
+{
+    "type": "stop_camera"
+}
+```
+
+**摄像头状态查询请求**:
+```json
+{
+    "type": "get_camera_status"
+}
+```
+
+**摄像头状态响应**:
+```json
+{
+    "type": "camera_status",
+    "data": {
+        "is_streaming": true,
+        "camera_opened": true,
+        "frame_width": 640,
+        "frame_height": 480,
+        "fps": 30
+    }
+}
+```
+
+---
+
+### 2. 手写识别WebSocket接口
+
+**接口描述**: 实时手写字符识别处理
+
+**WebSocket路由**: `/ws/handwriting/`
+
+**连接建立消息**:
+```json
+{
+    "type": "connection_established",
+    "message": "手写识别连接已建立",
+    "session_id": "session_abc123"
+}
+```
+
+**视频帧识别请求**:
+```json
+{
+    "type": "process_video_frame",
+    "frame_data": "<base64编码的视频帧数据>",
+    "timestamp": "2024-01-15T10:30:25.123Z"
+}
+```
+
+**识别成功响应**:
+```json
+{
+    "type": "recognition_result",
+    "data": {
+        "character": "A",
+        "confidence": 0.95,
+        "timestamp": "2024-01-15T10:30:25.123Z",
+        "session_id": "session_abc123"
+    }
+}
+```

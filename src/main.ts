@@ -6,8 +6,7 @@ import { createApp } from 'vue'
 // 导入Motion动画库
 import { motion, AnimatePresence } from 'motion-v'
 // 导入DevUI组件库
-import DevUI from 'vue-devui'
-import 'vue-devui/style.css'
+import DevUI from "vue-devui";
 import '@devui-design/icons/icomoon/devui-icon.css'
 
 // 导入vue-echarts

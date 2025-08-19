@@ -61,24 +61,48 @@ export interface HistoryQueryParams {
   end_date?: string // YYYY-MM-DD
 }
 
-export interface HistoryRecord {
-  id: number
+// 候选字符类型
+export interface CandidateCharacter {
   character: string
   confidence: number
-  recognition_time: string
-  image_path: string
-  session_id: string
+  class_id: number
 }
 
-export interface HistoryData {
-  total_count: number
-  page: number
-  page_size: number
+// 历史记录项类型
+export interface HistoryRecord {
+  id: number
+  detection_type: string
+  recognized_character: string
+  confidence: number
+  candidates: CandidateCharacter[]
+  processing_time: number
+  detection_time: string
+  image_url: string
+  is_correct: boolean | null
+  user_feedback: string | null
+}
+
+// 分页信息类型
+export interface PaginationInfo {
+  current_page: number
   total_pages: number
-  records: HistoryRecord[]
+  total_count: number
+  has_next: boolean
+  has_previous: boolean
 }
 
-export type HistoryResponse = ApiResponse<HistoryData>
+// 历史数据响应类型
+export interface HistoryData {
+  records: HistoryRecord[]
+  pagination: PaginationInfo
+}
+
+// 历史响应类型（匹配实际API响应格式）
+export interface HistoryResponse {
+  code: number
+  msg: HistoryData
+  data: string
+}
 
 // 统计数据相关类型
 export interface StatisticsQueryParams {

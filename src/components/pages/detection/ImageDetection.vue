@@ -72,8 +72,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { motion } from 'motion-v'
-import { detectImageAPI } from '@/api/admin/userApi'
-import DetectionResult from '@/components/common/DetectionResult.vue'
+import { detectImageAPI } from '@/api/user/userApi'
+import DetectionResult from '@/components/pages/detection/DetectionResult.vue'
 import type { ImageDetectResponse } from '@/types/apis/user_T'
 
 // 响应式数据

@@ -104,8 +104,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { motion } from 'motion-v'
-import { detectCanvasAPI } from '@/api/admin/userApi'
-import DetectionResult from '@/components/common/DetectionResult.vue'
+import { detectCanvasAPI } from '@/api/user/userApi'
+import DetectionResult from '@/components/pages/detection/DetectionResult.vue'
 import type { CanvasDetectResponse } from '@/types/apis/user_T'
 
 // 画笔相关数据
