@@ -60,12 +60,7 @@ export const adminMenuItems: AdminHeader[] = [
     icon: 'Search',
     path: '/admin/detectionManage',
   },
-  {
-    id: '4',
-    title: '历史管理',
-    icon: 'Clock',
-    path: '/admin/historyManage',
-  },
+
   {
     id: '5',
     title: '统计分析',
@@ -77,7 +72,7 @@ export const adminMenuItems: AdminHeader[] = [
 const serverConfig = {
   baseURL: '/api', // 请求基础地址,可根据环境自定义
 
-  useTokenAuthorization: false, // 是否开启 token 认证
+  useTokenAuthorization: true, // 是否开启 token 认证
 
   FileUploadUrl,
 

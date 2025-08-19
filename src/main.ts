@@ -6,11 +6,30 @@ import { createApp } from 'vue'
 // 导入Motion动画库
 import { motion, AnimatePresence } from 'motion-v'
 // 导入DevUI组件库
-import DevUI from "vue-devui";
-import '@devui-design/icons/icomoon/devui-icon.css'
 
 // 导入vue-echarts
-import VChart from 'vue-echarts'
+import ECharts from 'vue-echarts'
+import { use } from 'echarts/core'
+// 导入必要的echarts组件
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart, PieChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent
+} from 'echarts/components'
+
+// 注册echarts组件
+use([
+  CanvasRenderer,
+  LineChart,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent
+])
 
 // 导入i18n配置
 import i18n, { setupI18n } from '@/i18n'
@@ -55,11 +74,8 @@ app.use(i18n)
 // 使用Element Plus
 app.use(ElementPlus)
 
-// 使用DevUI
-app.use(DevUI)
-
-// 注册VChart组件
-app.component('VChart', VChart)
+// 注册vue-echarts组件
+app.component('v-chart', ECharts)
 
 // 注册Element Plus图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
