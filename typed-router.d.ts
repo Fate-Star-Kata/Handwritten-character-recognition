@@ -34,9 +34,7 @@ declare module 'vue-router/auto-routes' {
     '/detection/': RouteRecordInfo<'/detection/', '/detection', Record<never, never>, Record<never, never>>,
     '/history/': RouteRecordInfo<'/history/', '/history', Record<never, never>, Record<never, never>>,
     '/knowledge/': RouteRecordInfo<'/knowledge/', '/knowledge', Record<never, never>, Record<never, never>>,
-    '/motion-demo': RouteRecordInfo<'/motion-demo', '/motion-demo', Record<never, never>, Record<never, never>>,
     '/statistics/': RouteRecordInfo<'/statistics/', '/statistics', Record<never, never>, Record<never, never>>,
-    '/stats/': RouteRecordInfo<'/stats/', '/stats', Record<never, never>, Record<never, never>>,
     '/userInfo/': RouteRecordInfo<'/userInfo/', '/userInfo', Record<never, never>, Record<never, never>>,
   }
 
@@ -115,16 +113,8 @@ declare module 'vue-router/auto-routes' {
       routes: '/knowledge/'
       views: never
     }
-    'src/pages/motion-demo.vue': {
-      routes: '/motion-demo'
-      views: never
-    }
     'src/pages/statistics/index.vue': {
       routes: '/statistics/'
-      views: never
-    }
-    'src/pages/stats/index.vue': {
-      routes: '/stats/'
       views: never
     }
     'src/pages/userInfo/index.vue': {
