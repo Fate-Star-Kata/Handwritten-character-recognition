@@ -280,38 +280,23 @@ const error = ref('')
 // 计算属性 - 统计卡片数据
 const statCards = computed(() => {
   // 计算真实的识别准确率
-  let recognitionAccuracy = statisticsData.value?.avg_confidence || 0
-  let accuracySource = '模拟数据'
+  let recognitionAccuracy = statisticsData.value?.avg_accuracy || 0
+  let accuracySource = 'API数据'
   
-  if (statisticsData.value?.history && statisticsData.value.history.length > 0) {
-    const correctCount = statisticsData.value.history.filter(record => record.is_correct !== false).length
-    const totalCount = statisticsData.value.history.length
-    recognitionAccuracy = Math.round((correctCount / totalCount) * 100)
-    accuracySource = '真实计算'
-    
-    console.log('📊 识别准确率计算:', {
-      source: accuracySource,
-      correctCount: correctCount,
-      totalCount: totalCount,
-      accuracy: `${recognitionAccuracy}%`
-    })
-  } else {
-    console.log('📊 识别准确率使用模拟数据:', {
-      source: accuracySource,
-      reason: '无历史记录数据',
-      fallbackValue: `${recognitionAccuracy}%`
-    })
-  }
+  console.log('📊 识别准确率使用API数据:', {
+    source: accuracySource,
+    accuracy: `${recognitionAccuracy}%`
+  })
   
   return [
     { 
       icon: 'fas fa-search', 
-      value: statisticsData.value?.total_recognitions || 0, 
+      value: statisticsData.value?.total_detections || 0, 
       label: '总检测次数' 
     },
     { 
       icon: 'fas fa-percentage', 
-      value: `${Math.round(statisticsData.value?.avg_confidence || 0)}%`, 
+      value: `${Math.round(statisticsData.value?.avg_accuracy || 0)}%`, 
       label: '平均准确率' 
     },
     { 
@@ -321,7 +306,7 @@ const statCards = computed(() => {
     },
     { 
       icon: 'fas fa-font', 
-      value: statisticsData.value?.most_recognized_character || '-', 
+      value: statisticsData.value?.char_stats?.[0]?.recognized_character || '-', 
       label: '最常识别字符' 
     }
   ]
@@ -434,47 +419,23 @@ const loadStatistics = async () => {
       period: selectedPeriod.value
     }
     
-    const response: ActualStatisticsResponse = await getStatisticsAPI(params)
+    const response = await getStatisticsAPI(params)
     
-    if (response.code === 200 && response.msg) {
+    if (response.success && response.message) {
       // 直接使用API返回的数据结构
-      const apiData = response.msg
+      const apiData = response.message
       
-      // 构建字符分布数据
-      const characterDistribution: Record<string, number> = {}
-      apiData.char_stats.forEach(char => {
-        characterDistribution[char.recognized_character] = char.count
-      })
-      
-      // 找出最常识别的字符
-      const mostRecognizedChar = apiData.char_stats.length > 0 
-        ? apiData.char_stats[0].recognized_character 
-        : '无'
-      
-      // 转换为前端格式，保持daily_stats的完整结构
-      const convertedData: StatisticsData = {
-        total_recognitions: apiData.total_detections,
-        avg_confidence: apiData.avg_accuracy,
-        most_recognized_character: mostRecognizedChar,
-        recognition_accuracy: apiData.avg_accuracy,
-        daily_stats: apiData.daily_stats, // 直接使用API返回的完整daily_stats数据
-        character_distribution: characterDistribution,
-        type_stats: apiData.type_stats,
-        char_stats: apiData.char_stats,
-        history: apiData.history
-      }
+      // 直接使用API返回的数据结构
+      statisticsData.value = apiData
       
       console.log('✅ API数据处理完成:', {
-        totalDetections: convertedData.total_recognitions,
-        avgAccuracy: convertedData.avg_confidence,
-        dailyStatsCount: convertedData.daily_stats.length,
-        typeStatsCount: convertedData.type_stats?.length || 0,
-        charStatsCount: convertedData.char_stats?.length || 0,
-        historyCount: convertedData.history?.length || 0,
-        dailyStatsStructure: convertedData.daily_stats[0] || 'empty'
+        totalDetections: apiData.total_detections,
+        avgAccuracy: apiData.avg_accuracy,
+        dailyStatsCount: apiData.daily_stats.length,
+        typeStatsCount: apiData.type_stats?.length || 0,
+        charStatsCount: apiData.char_stats?.length || 0,
+        dailyStatsStructure: apiData.daily_stats[0] || 'empty'
       })
-      
-      statisticsData.value = convertedData
       
       // 更新图表
       await nextTick()
@@ -538,18 +499,18 @@ const updateTrendChart = () => {
 }
 
 const updateTopCharsChart = () => {
-  if (!statisticsData.value?.character_distribution) return
+  if (!statisticsData.value?.char_stats) return
   
   const count = parseInt(topCount.value.toString())
-  const distribution = statisticsData.value.character_distribution
+  const charStats = statisticsData.value.char_stats
   
-  // 将字符分布转换为数组并按数量排序
-  const sortedChars = Object.entries(distribution)
-    .sort(([,a], [,b]) => b - a)
+  // 按数量排序并取前N个
+  const sortedChars = charStats
+    .sort((a, b) => b.count - a.count)
     .slice(0, count)
   
-  const chars = sortedChars.map(([char]) => char)
-  const data = sortedChars.map(([, count]) => count)
+  const chars = sortedChars.map(char => char.recognized_character)
+  const data = sortedChars.map(char => char.count)
   
   topCharsChartOption.value = {
     title: {
@@ -589,11 +550,11 @@ const updateTopCharsChart = () => {
 const initCharts = () => {
   console.log('🔍 图表初始化 - 检查数据来源:')
   
-  // 检测趋势图 - 尝试使用真实数据
+  // 检测趋势图 - 使用真实数据
   if (statisticsData.value?.daily_stats && statisticsData.value.daily_stats.length > 0) {
     const dailyStats = statisticsData.value.daily_stats
     const dates = dailyStats.map(stat => stat.date)
-    const counts = dailyStats.map(stat => stat.count)
+    const counts = dailyStats.map(stat => stat.totalDetections)
     
     console.log('📊 检测趋势图使用真实数据:', { dates, counts })
     
@@ -762,7 +723,7 @@ const initCharts = () => {
   // 准确率分布 - 从字符统计计算
   if (statisticsData.value?.char_stats && statisticsData.value.char_stats.length > 0) {
     const charStats = statisticsData.value.char_stats
-    const avgAccuracy = statisticsData.value.avg_confidence || 0
+    const avgAccuracy = statisticsData.value.avg_accuracy || 0
     
     // 基于平均准确率模拟分布
     const accuracyRanges = {

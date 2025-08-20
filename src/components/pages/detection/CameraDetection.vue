@@ -148,7 +148,7 @@ import { motion } from 'motion-v'
 import { detectImageAPI } from '@/api/user/userApi'
 import DetectionResult from '@/components/pages/detection/DetectionResult.vue'
 import WsVideoDetection from '@/api/websocket/WsVideoDetection'
-import type { ImageDetectResponse } from '@/types/apis/user_T'
+import type { ImageDetectResponse, DetectionResult as ApiDetectionResult, WSDetectionResult } from '@/types/apis/user_T'
 import type { RecognitionResult, CameraStatus } from '@/api/websocket/WsVideoDetection'
 
 // 响应式数据
@@ -156,7 +156,8 @@ const cameraActive = ref(false)
 const isStarting = ref(false)
 const isCapturing = ref(false)
 const videoElement = ref<HTMLVideoElement | null>(null)
-const detectionResult = ref<ImageDetectResponse['data'] | null>(null)
+// 使用联合类型来支持两种不同的结果格式
+const detectionResult = ref<ApiDetectionResult | WSDetectionResult | null>(null)
 const detectionError = ref<string | null>(null)
 const wsConnected = ref(false)
 const isRealTimeMode = ref(false)
@@ -195,13 +196,13 @@ const initWebSocket = () => {
     },
     onRecognitionResult: (result) => {
       console.log('识别结果:', result)
-      // 转换WebSocket结果格式为组件期望的格式
-        detectionResult.value = {
-          character: result.character,
-          confidence: result.confidence,
-          recognition_time: new Date(result.timestamp).toISOString(), // 使用ISO格式的时间字符串
-          session_id: result.session_id
-        }
+      // 直接使用WebSocket结果格式，匹配响应示例.json
+      detectionResult.value = {
+        character: result.character,
+        confidence: result.confidence,
+        timestamp: result.timestamp,
+        session_id: result.session_id
+      } as WSDetectionResult
       emit('wsResult', result)
     },
     onError: (error) => {
@@ -536,7 +537,7 @@ const captureImage = async () => {
       image: imageFile
     })
     
-    if (response.success) {
+    if (response.success && response.data) {
       detectionResult.value = response.data
       emit('capture', imageData)
     } else {

@@ -356,8 +356,16 @@ const recognizeHandwriting = async () => {
       height: canvasElement.value.height
     })
 
-    if (response.success) {
-      detectionResult.value = response.data
+    if (response.success && response.data) {
+      // 处理识别结果，拼接图片路径
+      const result = {
+        ...response.data,
+        // 为recognized_character拼接完整路径用于显示
+        display_character: `${import.meta.env.VITE_SERVER_PATH}static/datasets/${response.data.recognized_character}`,
+        // 保持原始字符名称
+        recognized_character: response.data.recognized_character
+      }
+      detectionResult.value = result
       emit('recognize', imageData)
     } else {
       detectionError.value = response.message || '识别失败'
