@@ -1004,6 +1004,4 @@ onMounted(() => {
     gap: 1rem;
   }
 }
-<style scoped>
-/* 所有样式已替换为 Tailwind CSS 类名 */
 </style>
