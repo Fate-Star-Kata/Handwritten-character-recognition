@@ -298,6 +298,8 @@ const fetchStatistics = async (period: StatisticsPeriod = 'week') => {
   try {
     loading.value = true
     const data = await getStatisticsAPI({ period })
+    console.log(data);
+
     statisticsData.value = data
   } catch (error) {
     console.error('获取统计数据错误:', error)

@@ -12,7 +12,7 @@ export const getStatisticsAPI = async (params?: StatisticsParams): Promise<Stati
     method: 'GET',
     params
   })
-  return response.msg
+  return response.data
 }
 
 /**
@@ -38,7 +38,7 @@ export const getAdminModelInfoAPI = async (): Promise<any> => {
     url: '/handwriting/api/admin/model/info/',
     method: 'GET'
   })
-  return response.msg
+  return response.data
 }
 
 /**

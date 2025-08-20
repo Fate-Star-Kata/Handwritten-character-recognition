@@ -30,7 +30,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-blue-100 text-sm font-medium">总识别次数</p>
-                <p class="text-3xl font-bold">{{ metrics.totalRecognitions.toLocaleString() }}</p>
+                <p class="text-3xl font-bold">{{ (metrics.totalRecognitions || 0).toLocaleString() }}</p>
                 <div class="flex items-center mt-2">
                   <el-icon class="text-green-300 mr-1">
                     <TrendCharts />
@@ -84,7 +84,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-purple-100 text-sm font-medium">活跃用户数</p>
-                <p class="text-3xl font-bold">{{ metrics.activeUsers.toLocaleString() }}</p>
+                <p class="text-3xl font-bold">{{ (metrics.activeUsers || 0).toLocaleString() }}</p>
                 <div class="flex items-center mt-2">
                   <el-icon class="text-green-300 mr-1">
                     <TrendCharts />
@@ -219,7 +219,7 @@
           <el-table-column prop="date" label="日期" width="120" />
           <el-table-column prop="recognitions" label="识别次数" width="120">
             <template #default="{ row }">
-              {{ row.recognitions.toLocaleString() }}
+              {{ (row.recognitions || 0).toLocaleString() }}
             </template>
           </el-table-column>
           <el-table-column prop="accuracy" label="平均准确率" width="120">
@@ -234,7 +234,7 @@
           </el-table-column>
           <el-table-column prop="activeUsers" label="活跃用户" width="120">
             <template #default="{ row }">
-              {{ row.activeUsers.toLocaleString() }}
+              {{ (row.activeUsers || 0).toLocaleString() }}
             </template>
           </el-table-column>
           <el-table-column prop="errorRate" label="错误率" width="100">
@@ -384,13 +384,13 @@ const detailedStats = computed(() => {
   // 基于daily_stats生成详细统计
   return (stats.daily_stats || []).map(dailyStat => ({
     date: dailyStat.date,
-    recognitions: dailyStat.count,
+    recognitions: dailyStat.count || 0,
     accuracy: Math.round((stats.avg_accuracy || 0) * 100) / 100,
     responseTime: adminStats.performance_stats?.avg_response_time || 0,
     activeUsers: Math.floor((adminStats.system_info?.active_users_today || 0) / 7), // 估算每日活跃用户
     errorRate: Math.round((100 - (adminStats.performance_stats?.success_rate || 100)) * 100) / 100,
     peakHour: '14:00-15:00', // 可以根据实际数据分析得出
-    totalProcessed: dailyStat.count * 1024 * 1024 // 估算处理数据量
+    totalProcessed: (dailyStat.count || 0) * 1024 * 1024 // 估算处理数据量
   }))
 })
 
