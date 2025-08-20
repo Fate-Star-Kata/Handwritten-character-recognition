@@ -189,7 +189,6 @@ import {
 import {
   getDetectionList,
   deleteDetection,
-  batchDeleteDetections,
   exportDetectionData
 } from '@/api/admin/history'
 import type {
@@ -363,19 +362,44 @@ const batchDelete = async () => {
       type: 'warning'
     })
 
-    const response = await batchDeleteDetections(selectedIds.value)
-    if (response.code === 200) {
-      ElMessage.success(response.message || response.data || '批量删除成功')
-      selectedIds.value = []
-      getList()
-    } else {
-      ElMessage.error(response.message || response.data || '批量删除失败')
+    loading.value = true
+    let successCount = 0
+    let failCount = 0
+
+    // 循环调用单个删除接口
+    for (const id of selectedIds.value) {
+      try {
+        const response = await deleteDetection(id)
+        if (response.data) {
+          successCount++
+        } else {
+          failCount++
+          console.error(`删除记录 ${id} 失败:`, response.message)
+        }
+      } catch (error) {
+        failCount++
+        console.error(`删除记录 ${id} 失败:`, error)
+      }
     }
+
+    // 显示结果消息
+    if (failCount === 0) {
+      ElMessage.success(`成功删除 ${successCount} 条记录`)
+    } else if (successCount === 0) {
+      ElMessage.error(`删除失败，共 ${failCount} 条记录删除失败`)
+    } else {
+      ElMessage.warning(`删除完成：成功 ${successCount} 条，失败 ${failCount} 条`)
+    }
+
+    selectedIds.value = []
+    getList()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('批量删除失败:', error)
       ElMessage.error('批量删除失败')
     }
+  } finally {
+    loading.value = false
   }
 }
 
