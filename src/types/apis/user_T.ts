@@ -157,9 +157,9 @@ export interface ActualStatisticsData {
 
 // 实际API响应格式
 export interface ActualStatisticsResponse {
-  code: number;
-  msg: ActualStatisticsData;
-  data: string;
+  success: boolean;
+  msg: string;
+  data: ActualStatisticsData;
 }
 
 // 前端使用的统计数据类型（与实际API返回结构保持一致）
