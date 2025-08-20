@@ -11,7 +11,7 @@
           </div>
           <Motion :initial="{ opacity: 0, x: 20 }" :animate="{ opacity: 1, x: 0 }" :whileHover="{ scale: 1.05 }"
             :transition="{ duration: 0.3, delay: 0.2 }">
-            <el-button type="primary" :icon="Refresh" @click="getList">刷新数据</el-button>
+            <el-button type="primary" :icon="Refresh" :loading="loading" circle @click="getList" />
           </Motion>
         </div>
       </el-card>
@@ -118,8 +118,8 @@
           </div>
         </template>
 
-        <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange" stripe style="width: 100%"
-          table-layout="auto" border>
+        <el-table v-loading="loading" :data="paginatedList" @selection-change="handleSelectionChange" stripe
+          style="width: 100%" table-layout="auto" border>
           <el-table-column type="selection" width="55" />
           <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="detection_type" label="用户" min-width="120" />
@@ -163,8 +163,7 @@
         <!-- 分页 -->
         <div class="flex justify-center mt-6">
           <el-pagination v-model:current-page="params.page" v-model:page-size="params.page_size"
-            :page-sizes="[10, 20, 50, 100]" :total="total" layout="total, sizes, prev, pager, next, jumper"
-            @size-change="getList" @current-change="getList" />
+            :page-sizes="[10, 20, 50, 100]" :total="filteredTotal" layout="total, sizes, prev, pager, next, jumper" />
         </div>
       </el-card>
     </Motion>
@@ -174,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { Motion } from 'motion-v'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -261,10 +260,55 @@ const getList = async () => {
   }
 }
 
-// 搜索
+// 本地搜索和筛选
+const filteredList = computed(() => {
+  let result = list.value
+
+  // 搜索筛选
+  if (params.search) {
+    const searchTerm = params.search.toLowerCase()
+    result = result.filter(item =>
+      item.detection_type?.toLowerCase().includes(searchTerm) ||
+      item.recognized_character?.toLowerCase().includes(searchTerm) ||
+      item.id.toString().includes(searchTerm)
+    )
+  }
+
+  // 状态筛选
+  if (params.status) {
+    result = result.filter(item => {
+      if (params.status === 'success') return item.is_correct === true
+      if (params.status === 'failed') return item.is_correct === false
+      if (params.status === 'processing') return item.is_correct === null
+      return true
+    })
+  }
+
+  // 时间范围筛选
+  if (params.dateRange && params.dateRange.length === 2) {
+    const [startDate, endDate] = params.dateRange
+    result = result.filter(item => {
+      const itemDate = new Date(item.detection_time).toISOString().slice(0, 10)
+      return itemDate >= startDate && itemDate <= endDate
+    })
+  }
+
+  return result
+})
+
+// 分页后的数据
+const paginatedList = computed(() => {
+  const start = (params.page - 1) * params.page_size
+  const end = start + params.page_size
+  return filteredList.value.slice(start, end)
+})
+
+// 更新总数
+const filteredTotal = computed(() => filteredList.value.length)
+
+// 搜索（本地搜索，重置页码）
 const search = () => {
   params.page = 1
-  getList()
 }
 
 // 重置参数
@@ -276,7 +320,6 @@ const resetParams = () => {
     page: 1,
     page_size: 10
   })
-  getList()
 }
 
 
