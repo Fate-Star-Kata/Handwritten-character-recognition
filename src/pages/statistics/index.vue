@@ -420,10 +420,11 @@ const loadStatistics = async () => {
     }
     
     const response = await getStatisticsAPI(params)
+    console.log("获取统计数据",response)
     
-    if (response.success && response.message) {
+    if (response.success && response.data) {
       // 直接使用API返回的数据结构
-      const apiData = response.message
+      const apiData = response.data
       
       // 直接使用API返回的数据结构
       statisticsData.value = apiData
@@ -456,7 +457,7 @@ const updateTrendChart = () => {
   
   const dailyStats = statisticsData.value.daily_stats
   const labels = dailyStats.map(stat => stat.date)
-  const data = dailyStats.map(stat => stat.count)
+  const data = dailyStats.map(stat => stat.totalDetections)
   
   trendChartOption.value = {
     tooltip: {
