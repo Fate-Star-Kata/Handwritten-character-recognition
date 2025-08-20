@@ -239,6 +239,7 @@ const getList = async () => {
   try {
     loading.value = true
     const response = await getDetectionList(params)
+    console.log(response)
     if (response.success && response.data) {
       list.value = response.data.records || []
       total.value = response.data.total || 0
@@ -290,7 +291,8 @@ const deleteRecord = async (id: number) => {
     })
 
     const response = await deleteDetection(id)
-    if (response.code === 200) {
+    console.log(response)
+    if (response.data) {
       ElMessage.success(response.message || response.data || '删除成功')
       getList()
     } else {

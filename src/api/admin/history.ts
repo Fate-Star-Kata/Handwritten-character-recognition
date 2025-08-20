@@ -32,37 +32,71 @@ export const getDetectionList = async (params: DetectionQueryParams): Promise<De
   }
 
   // 添加日期范围
-  if (params.start_date) {
-    queryParams.append('start_date', params.start_date)
-  }
-  if (params.end_date) {
-    queryParams.append('end_date', params.end_date)
+  if (params.dateRange && params.dateRange.length === 2) {
+    queryParams.append('start_date', params.dateRange[0])
+    queryParams.append('end_date', params.dateRange[1])
+  } else {
+    if (params.start_date) {
+      queryParams.append('start_date', params.start_date)
+    }
+    if (params.end_date) {
+      queryParams.append('end_date', params.end_date)
+    }
   }
 
   try {
-    const response: ApiResponse<DetectionApiResponse> = await http.get(`/handwriting/api/admin/history/?${queryParams.toString()}`)
+    const response: any = await http.get(`/handwriting/api/admin/history/?${queryParams.toString()}`)
+    console.log('API Response:', response)
 
-    // 适配API响应格式
-    if (response.code === 200 && response.msg) {
-      const { records, pagination } = response.msg
+    // http模块已经转换了响应格式: {success: boolean, message: string, data: any}
+    if (response.success) {
+      // 当data为null时，返回空数据
+      if (response.data === null) {
+        return {
+          success: true,
+          message: response.message || '获取检测记录成功',
+          data: {
+            records: [],
+            total: 0,
+            statistics: {
+              total: 0,
+              success: 0,
+              failed: 0,
+              processing: 0,
+              accuracy: 0
+            }
+          }
+        }
+      }
+
+      // 处理新的API响应格式
+      const records = response.data?.records || []
+      const pagination = response.data?.pagination || {}
+      const total = pagination.total_count || 0
+
+      // 计算统计数据
+      const successCount = records.filter((r: any) => r.is_correct === true).length
+      const failedCount = records.filter((r: any) => r.is_correct === false).length
+      const processingCount = records.filter((r: any) => r.is_correct === null).length
+      const accuracy = total > 0 ? (successCount / total) * 100 : 0
 
       return {
         success: true,
-        message: '获取检测记录成功',
+        message: response.message || '获取检测记录成功',
         data: {
           records: records,
-          total: pagination.total_count,
+          total: total,
           statistics: {
-            total: pagination.total_count,
-            success: records.filter((r: any) => r.is_correct === true).length,
-            failed: records.filter((r: any) => r.is_correct === false).length,
-            processing: records.filter((r: any) => r.is_correct === null).length,
-            accuracy: records.length > 0 ? (records.filter((r: any) => r.is_correct === true).length / records.length) * 100 : 0
+            total: total,
+            success: successCount,
+            failed: failedCount,
+            processing: processingCount,
+            accuracy: Math.round(accuracy * 100) / 100 // 保留两位小数
           }
         }
       }
     } else {
-      throw new Error(response.msg?.toString() || '获取检测记录失败')
+      throw new Error(response.message || '获取检测记录失败')
     }
   } catch (error: any) {
     console.error('获取检测记录失败:', error)
