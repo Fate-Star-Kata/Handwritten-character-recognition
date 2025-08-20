@@ -1,87 +1,102 @@
 <template>
-  <div class="detection-result-container">
+  <div class="w-full mt-8">
     <motion.div
       v-if="result"
       :initial="{ opacity: 0, scale: 0.9 }"
       :animate="{ opacity: 1, scale: 1 }"
       :transition="{ duration: 0.5 }"
-      class="result-card"
+      class="bg-white rounded-2xl p-8 shadow-xl border border-gray-200"
     >
-      <div class="result-header">
-        <div class="result-icon">
+      <div class="flex items-center gap-4 mb-6">
+        <div>
           <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
-        <h3 class="result-title">识别结果</h3>
+        <h3 class="text-xl font-bold text-gray-800 m-0">识别结果</h3>
       </div>
 
-      <div class="result-content">
-        <!-- 图片显示区域 -->
-        <div class="images-container">
+      <div>
+        <!-- 图片显示区域（仅当有图片URL时显示） -->
+        <div v-if="showImageUrl || showRecognizedBlock" class="flex gap-6 mb-6 flex-wrap justify-center">
           <!-- 用户上传的图片 -->
-          <div v-if="result.image_url" class="image-display">
-            <h4 class="image-title">上传的图片</h4>
+          <div v-if="showImageUrl" class="text-center p-4 bg-slate-50 rounded-2xl border border-slate-200 flex-1 min-w-[200px] max-w-[300px]">
+            <h4 class="text-sm font-semibold text-gray-600 mb-3 m-0 uppercase tracking-wide">上传的图片</h4>
             <img 
-              :src="getFullImageUrl(result.image_url)" 
+              :src="getFullImageUrl((result as any).image_url)" 
               alt="用户上传的图片" 
-              class="result-image"
+              class="max-w-full max-h-[200px] object-contain rounded-lg shadow-md"
               @error="handleImageError"
             />
           </div>
           
-          <!-- 识别到的标准字符图片 -->
-          <div v-if="result.recognized_character" class="image-display">
-            <h4 class="image-title">识别结果</h4>
-            <img 
-              :src="getFullImageUrl(result.recognized_character)" 
-              alt="识别到的标准字符" 
-              class="result-image recognized-char-image"
-              @error="handleImageError"
-            />
+          <!-- 识别到的标准字符图片（仅REST结果显示） -->
+          <div v-if="showRecognizedBlock" class="text-center p-4 bg-slate-50 rounded-2xl border border-slate-200 flex-1 min-w-[200px] max-w-[300px]">
+            <h4 class="text-sm font-semibold text-gray-600 mb-3 m-0 uppercase tracking-wide">识别结果</h4>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-blue-700 mb-4 m-0 drop-shadow-sm">{{ displayChar }}</p>
+              <img 
+                v-if="recognizedImageSrc"
+                :src="recognizedImageSrc" 
+                alt="识别到的标准字符" 
+                class="max-w-full max-h-[200px] object-contain rounded-lg shadow-md border-2 border-emerald-500 bg-green-50"
+                @error="handleImageError"
+              />
+            </div>
           </div>
         </div>
         
-        <div class="result-details">
-          <div class="detail-item">
-            <span class="detail-label">置信度:</span>
-            <div class="confidence-bar">
+        <div class="flex flex-col gap-4 mb-8">
+          <!-- 识别字符显示 -->
+          <div class="flex items-center gap-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <span class="font-semibold text-gray-700 min-w-[80px]">识别字符:</span>
+            <span class="text-2xl font-bold text-blue-700 bg-white px-4 py-2 rounded-lg border border-blue-300 shadow-sm">{{ displayChar }}</span>
+          </div>
+          
+          <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+            <span class="font-semibold text-gray-700 min-w-[80px]">置信度:</span>
+            <div class="flex-1 relative h-6 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                class="confidence-fill" 
+                class="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full transition-all duration-500" 
                 :style="{ width: `${(result.confidence * 100)}%` }"
               ></div>
-              <span class="confidence-text">{{ (result.confidence * 100).toFixed(1) }}%</span>
+              <span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-semibold text-gray-800 text-sm">{{ (result.confidence * 100).toFixed(1) }}%</span>
             </div>
           </div>
           
-          <div class="detail-item">
-            <span class="detail-label">耗时:</span>
-            <span class="detail-value">{{ result.processing_time }}秒</span>
+          <div v-if="processingTime !== null" class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+            <span class="font-semibold text-gray-700 min-w-[80px]">耗时:</span>
+            <span class="text-gray-600 font-mono">{{ processingTime }}秒</span>
           </div>
           
-          <div v-if="result.session_id" class="detail-item">
-            <span class="detail-label">会话ID:</span>
-            <span class="detail-value session-id">{{ result.session_id }}</span>
+          <div v-if="sessionId" class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+            <span class="font-semibold text-gray-700 min-w-[80px]">会话ID:</span>
+            <span class="text-gray-600 font-mono text-sm bg-gray-200 px-2 py-1 rounded">{{ sessionId }}</span>
+          </div>
+
+          <div v-if="timestampText" class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+            <span class="font-semibold text-gray-700 min-w-[80px]">时间:</span>
+            <span class="text-gray-600 font-mono">{{ timestampText }}</span>
           </div>
         </div>
       </div>
 
-      <div class="result-actions">
-        <button @click="copyResult" class="copy-btn">
+      <div class="flex gap-4 justify-center flex-wrap">
+        <button @click="copyResult" class="bg-gradient-to-r from-blue-500 to-blue-700 text-white border-none rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
           </svg>
           复制结果
         </button>
         
-        <button @click="saveToHistory" class="save-btn">
+        <button @click="saveToHistory" class="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white border-none rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
           </svg>
           保存到历史
         </button>
         
-        <button @click="clearResult" class="clear-btn">
+        <button @click="clearResult" class="bg-gray-100 text-gray-700 border border-gray-300 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:bg-gray-200 hover:-translate-y-0.5">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -96,30 +111,30 @@
       :initial="{ opacity: 0, scale: 0.9 }"
       :animate="{ opacity: 1, scale: 1 }"
       :transition="{ duration: 0.5 }"
-      class="error-card"
+      class="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-8 shadow-xl border border-red-200"
     >
-      <div class="error-header">
-        <div class="error-icon">
+      <div class="flex items-center gap-4 mb-6">
+        <div>
           <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
-        <h3 class="error-title">识别失败</h3>
+        <h3 class="text-xl font-bold text-gray-800 m-0">识别失败</h3>
       </div>
       
-      <div class="error-content">
-        <p class="error-message">{{ error }}</p>
+      <div class="mb-6">
+        <p class="text-red-600 font-medium text-center m-0">{{ error }}</p>
       </div>
       
-      <div class="error-actions">
-        <button @click="retry" class="retry-btn">
+      <div class="flex gap-4 justify-center flex-wrap">
+        <button @click="retry" class="bg-gradient-to-r from-amber-500 to-amber-700 text-white border-none rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/30">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
           重试
         </button>
         
-        <button @click="clearError" class="clear-error-btn">
+        <button @click="clearError" class="bg-gray-100 text-gray-700 border border-gray-300 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 hover:bg-gray-200 hover:-translate-y-0.5">
           关闭
         </button>
       </div>
@@ -131,16 +146,16 @@
       :initial="{ opacity: 0 }"
       :animate="{ opacity: 1 }"
       :transition="{ duration: 0.3 }"
-      class="loading-card"
+      class="bg-white rounded-2xl p-8 shadow-xl border border-gray-200 text-center"
     >
-      <div class="loading-content">
-        <div class="loading-spinner">
+      <div class="flex flex-col items-center gap-4">
+        <div>
           <svg class="animate-spin w-12 h-12 text-blue-500" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
-        <p class="loading-text">正在识别中...</p>
+        <p class="text-lg font-semibold text-blue-600 m-0">正在识别中...</p>
       </div>
     </motion.div>
   </div>
@@ -149,7 +164,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { motion } from 'motion-v'
-import type { DetectionResult } from '@/types/apis/user_T'
+import type { DetectionResult, WSDetectionResult } from '@/types/apis/user_T'
 
 // 获取环境变量
 const serverPath = import.meta.env.VITE_SERVER_PATH || 'http://localhost:8000/'
@@ -174,7 +189,7 @@ const handleImageError = (event: Event) => {
 
 // Props
 interface Props {
-  result?: DetectionResult | null
+  result?: DetectionResult | WSDetectionResult | null
   error?: string | null
   loading?: boolean
 }
@@ -189,9 +204,64 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   retry: []
   clear: []
-  copy: [result: DetectionResult]
-  save: [result: DetectionResult]
+  copy: [result: DetectionResult | WSDetectionResult]
+  save: [result: DetectionResult | WSDetectionResult]
 }>()
+
+// 判定是否为WebSocket结果
+const isWSResult = computed(() => {
+  return !!props.result && 'character' in (props.result as any) && !('recognized_character' in (props.result as any))
+})
+
+// 展示字符（兼容两种格式）
+const displayChar = computed(() => {
+  if (!props.result) return ''
+  return isWSResult.value
+    ? (props.result as WSDetectionResult).character
+    : (props.result as DetectionResult).recognized_character
+})
+
+// 是否显示上传图片
+const showImageUrl = computed(() => {
+  return !!props.result && 'image_url' in (props.result as any) && !!(props.result as any).image_url
+})
+
+// 是否显示识别结果图片块（仅REST）
+const showRecognizedBlock = computed(() => {
+  return !!props.result && !isWSResult.value && !!(props.result as DetectionResult).recognized_character
+})
+
+// 识别结果图片（仅REST）
+const recognizedImageSrc = computed(() => {
+  if (!props.result || isWSResult.value) return ''
+  const rest = props.result as DetectionResult
+  const display = (rest as any).display_character as string | undefined
+  if (display) return display
+  // 拼接 VITE_SERVER_PATH + /static/datasets/ + recognized_character
+  const serverPath = import.meta.env.VITE_SERVER_PATH || 'http://localhost:8000/'
+  const basePath = serverPath.endsWith('/') ? serverPath : serverPath + '/'
+  return `${basePath}static/datasets/${rest.recognized_character}`
+})
+
+// 耗时（仅REST）
+const processingTime = computed(() => {
+  if (!props.result) return null
+  return 'processing_time' in (props.result as any) ? (props.result as any).processing_time as number : null
+})
+
+// 会话ID（WS 结果可能有）
+const sessionId = computed(() => {
+  if (!props.result) return ''
+  return 'session_id' in (props.result as any) ? (props.result as any).session_id as string : ''
+})
+
+// 时间（WS 结果可能有 timestamp）
+const timestampText = computed(() => {
+  if (!props.result) return ''
+  const ts = 'timestamp' in (props.result as any) ? (props.result as any).timestamp as string : ''
+  if (!ts) return ''
+  return formatTime(ts)
+})
 
 // 格式化时间
 const formatTime = (timeStr: string) => {
@@ -213,10 +283,9 @@ const formatTime = (timeStr: string) => {
 // 复制结果
 const copyResult = async () => {
   if (!props.result) return
-  
+  const text = displayChar.value || ''
   try {
-    await navigator.clipboard.writeText(props.result.character)
-    // 这里可以添加提示消息
+    await navigator.clipboard.writeText(text)
     console.log('复制成功')
     emit('copy', props.result)
   } catch (error) {
@@ -246,309 +315,46 @@ const clearError = () => {
 }
 </script>
 
-<style scoped lang="scss">
-.detection-result-container {
-  width: 100%;
-  margin-top: 2rem;
-}
-
-.result-card,
-.error-card,
-.loading-card {
-  background: white;
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-}
-
-.result-header,
-.error-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.result-title,
-.error-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-}
-
-.images-container {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.image-display {
-  text-align: center;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 1rem;
-  border: 1px solid #e2e8f0;
-  flex: 1;
-  min-width: 200px;
-  max-width: 300px;
-}
-
-.image-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #4b5563;
-  margin: 0 0 0.75rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.result-image {
-  max-width: 100%;
-  max-height: 200px;
-  object-fit: contain;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.recognized-char-image {
-  border: 2px solid #10b981;
-  background: #f0fdf4;
-}
-
-.character-display {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-  border-radius: 1rem;
-  border: 2px solid #3b82f6;
-}
-
-.character {
-  font-size: 4rem;
-  font-weight: 900;
-  color: #1e40af;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.result-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-  background: #f9fafb;
-  border-radius: 0.5rem;
-}
-
-.detail-label {
-  font-weight: 600;
-  color: #374151;
-  min-width: 80px;
-}
-
-.detail-value {
-  color: #6b7280;
-  font-family: monospace;
-}
-
-.session-id {
-  font-size: 0.875rem;
-  background: #e5e7eb;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-}
-
-.confidence-bar {
-  flex: 1;
-  position: relative;
-  height: 24px;
-  background: #e5e7eb;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.confidence-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
-  border-radius: 12px;
-  transition: width 0.5s ease;
-}
-
-.confidence-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-weight: 600;
-  color: #1f2937;
-  font-size: 0.875rem;
-}
-
-.result-actions,
-.error-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.copy-btn,
-.save-btn {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-  }
-}
-
-.save-btn {
-  background: linear-gradient(135deg, #10b981, #059669);
-  
-  &:hover {
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-  }
-}
-
-.clear-btn,
-.clear-error-btn {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  
-  &:hover {
-    background: #e5e7eb;
-    transform: translateY(-2px);
-  }
-}
-
-.retry-btn {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
-  }
-}
-
-.error-card {
-  border-color: #fecaca;
-  background: linear-gradient(135deg, #fef2f2, #fee2e2);
-}
-
-.error-content {
-  margin-bottom: 1.5rem;
-}
-
-.error-message {
-  color: #dc2626;
-  font-weight: 500;
-  text-align: center;
-  margin: 0;
-}
-
-.loading-card {
-  text-align: center;
-}
-
-.loading-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.loading-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #3b82f6;
-  margin: 0;
-}
-
+<style scoped>
+/* 移动端响应式样式 */
 @media (max-width: 768px) {
-  .result-card,
-  .error-card,
-  .loading-card {
-    padding: 1.5rem;
+  .bg-white.rounded-2xl.p-8 {
+    @apply p-6;
   }
   
-  .images-container {
-    flex-direction: column;
-    gap: 1rem;
+  .flex.gap-6.mb-6.flex-wrap.justify-center {
+    @apply flex-col gap-4;
   }
   
-  .image-display {
-    max-width: 100%;
-    min-width: auto;
+  .text-center.p-4.bg-slate-50.rounded-2xl.border.border-slate-200.flex-1.min-w-\[200px\].max-w-\[300px\] {
+    @apply max-w-full min-w-0;
   }
   
-  .character {
-    font-size: 3rem;
+  .text-2xl.font-bold.text-blue-700.mb-4.m-0.drop-shadow-sm {
+    @apply text-xl;
   }
   
-  .detail-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .flex.items-center.gap-4.p-3.bg-gray-50.rounded-lg {
+    @apply flex-col items-start gap-2;
   }
   
-  .detail-label {
-    min-width: auto;
+  .font-semibold.text-gray-700.min-w-\[80px\] {
+    @apply min-w-0;
   }
   
-  .confidence-bar {
-    width: 100%;
+  .flex-1.relative.h-6.bg-gray-200.rounded-full.overflow-hidden {
+    @apply w-full;
   }
   
-  .result-actions,
-  .error-actions {
-    flex-direction: column;
-    align-items: center;
+  .flex.gap-4.justify-center.flex-wrap {
+    @apply flex-col items-center;
   }
   
-  .copy-btn,
-  .save-btn,
-  .clear-btn,
-  .retry-btn,
-  .clear-error-btn {
-    width: 100%;
-    justify-content: center;
+  .bg-gradient-to-r.from-blue-500.to-blue-700.text-white.border-none.rounded-lg.px-6.py-3.font-semibold.cursor-pointer.transition-all.duration-300.flex.items-center.hover\:-translate-y-0\.5.hover\:shadow-lg.hover\:shadow-blue-500\/30,
+  .bg-gradient-to-r.from-emerald-500.to-emerald-700.text-white.border-none.rounded-lg.px-6.py-3.font-semibold.cursor-pointer.transition-all.duration-300.flex.items-center.hover\:-translate-y-0\.5.hover\:shadow-lg.hover\:shadow-emerald-500\/30,
+  .bg-gray-100.text-gray-700.border.border-gray-300.rounded-lg.px-6.py-3.font-semibold.cursor-pointer.transition-all.duration-300.flex.items-center.hover\:bg-gray-200.hover\:-translate-y-0\.5,
+  .bg-gradient-to-r.from-amber-500.to-amber-700.text-white.border-none.rounded-lg.px-6.py-3.font-semibold.cursor-pointer.transition-all.duration-300.flex.items-center.hover\:-translate-y-0\.5.hover\:shadow-lg.hover\:shadow-amber-500\/30 {
+    @apply w-full justify-center;
   }
 }
 </style>

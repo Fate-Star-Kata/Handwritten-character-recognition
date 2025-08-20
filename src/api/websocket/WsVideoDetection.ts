@@ -41,10 +41,18 @@ export class WsVideoDetection {
   constructor(callbacks: VideoDetectionCallbacks = {}) {
     this.callbacks = callbacks
     
-    // 从环境变量获取WebSocket地址
-    const wsBaseUrl =
-      import.meta.env.VITE_WEBSOCKET_PATH || "ws://localhost:8000";
-    const wsUrl = `${wsBaseUrl}/ws/camera/`
+    // 从环境变量获取WebSocket地址，并转换为 ws/wss 协议，移除尾部斜杠
+    const rawBase = import.meta.env.VITE_WEBSOCKET_PATH || 'ws://localhost:8000'
+    let wsBaseUrl = String(rawBase)
+      .replace(/^https?:\/\//i, (m) => (m.toLowerCase() === 'https://' ? 'wss://' : 'ws://'))
+      .replace(/\/$/, '')
+
+    // 手写识别 WebSocket 路径
+    const wsUrl = `${wsBaseUrl}/ws/handwriting/`
+
+    // 调试日志：确认最终连接地址
+    // eslint-disable-next-line no-console
+    console.log('[WsVideoDetection] 使用的 WebSocket 地址:', wsUrl)
     
     this.wsClient = new WebSocketClient(
       wsUrl,
@@ -73,17 +81,17 @@ export class WsVideoDetection {
     this.wsClient.close()
   }
 
-  // 启动摄像头
+  // 启动摄像头（兼容保留，服务端可忽略）
   startCamera() {
     this.sendMessage({ type: 'start_camera' })
   }
 
-  // 停止摄像头
+  // 停止摄像头（兼容保留，服务端可忽略）
   stopCamera() {
     this.sendMessage({ type: 'stop_camera' })
   }
 
-  // 查询摄像头状态
+  // 查询摄像头状态（兼容保留，服务端可忽略）
   getCameraStatus() {
     this.sendMessage({ type: 'get_camera_status' })
   }
@@ -92,10 +100,10 @@ export class WsVideoDetection {
   processVideoFrame(frameData: string) {
     console.log('发送视频帧进行识别')
     this.sendMessage({
-      type: "process_video_frame",
+      type: 'process_video_frame',
       frame_data: frameData,
       timestamp: new Date().toISOString()
-    });
+    })
   }
 
   // 发送消息
@@ -125,26 +133,53 @@ export class WsVideoDetection {
       }
 
       switch (message.type) {
-        case 'connection_established':
+        case 'connection_established': {
           this.sessionId = message.session_id || null
           this.callbacks.onConnectionEstablished?.(message.message)
           break
+        }
 
-        case 'camera_started':
+        case 'camera_started': {
           this.callbacks.onCameraStarted?.(message.message)
           break
+        }
 
-        case 'camera_status':
+        case 'camera_status': {
           this.callbacks.onCameraStatus?.(message.data)
           break
+        }
 
-        case 'recognition_result':
-          this.callbacks.onRecognitionResult?.(message.data)
+        case 'recognition_result': {
+          // 后端可能返回 { data: {...} } 或 { result: {...}, session_id, ... }
+          const payload = (message.data ?? message.result ?? message)
+          const rawTs = payload?.timestamp ?? message.timestamp
+
+          let ts: string
+          if (typeof rawTs === 'number') {
+            // 秒或毫秒级时间戳均可，做一个合理判断
+            ts = new Date((rawTs > 1e12 ? rawTs : rawTs * 1000)).toISOString()
+          } else if (typeof rawTs === 'string') {
+            const d = new Date(rawTs)
+            ts = isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString()
+          } else {
+            ts = new Date().toISOString()
+          }
+
+          const normalized: RecognitionResult = {
+            character: payload?.character ?? '',
+            confidence: typeof payload?.confidence === 'number' ? payload.confidence : 0,
+            timestamp: ts,
+            session_id: message.session_id || payload?.session_id || this.sessionId || ''
+          }
+
+          this.callbacks.onRecognitionResult?.(normalized)
           break
+        }
 
-        case 'error':
+        case 'error': {
           this.callbacks.onError?.(message.message || '未知错误')
           break
+        }
 
         case 'pong':
           // 心跳响应，无需处理

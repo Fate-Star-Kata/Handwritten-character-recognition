@@ -1,34 +1,48 @@
 <template>
-  <div class="history-container">
-    <motion.div :initial="{ opacity: 0, y: 20 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.6 }"
-      class="history-page">
+  <div class="min-h-screen bg-slate-50 p-8">
+    <motion.div
+      :initial="{ opacity: 0, y: 20 }"
+      :animate="{ opacity: 1, y: 0 }"
+      :transition="{ duration: 0.6 }"
+      class="max-w-6xl mx-auto"
+    >
       <!-- 页面标题 -->
-      <div class="page-header">
-        <h1 class="page-title">检测历史</h1>
-        <p class="page-description">查看和管理您的手写字识别历史记录</p>
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">检测历史</h1>
+        <p class="text-gray-500 text-lg">查看和管理您的手写字识别历史记录</p>
       </div>
 
       <!-- 搜索和筛选区域 -->
-      <div class="search-filter-section">
-        <div class="search-box">
-          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      <div class="flex gap-4 mb-8 flex-wrap items-stretch bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <div class="relative flex-1 min-w-[300px]">
+          <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
-          <input v-model="searchQuery" type="text" placeholder="搜索识别结果..." class="search-input" @input="handleSearch" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="搜索识别结果..."
+            class="w-full h-11 pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm transition-all duration-300 bg-gray-50 box-border focus:outline-none focus:border-blue-500 focus:shadow-blue-100 focus:shadow-[0_0_0_3px] focus:bg-white hover:bg-white hover:border-gray-400"
+            @input="handleSearch"
+          />
         </div>
 
-        <div class="filter-controls">
-          <select v-model="selectedType" class="select select-bordered w-full max-w-xs" @change="handleFilterChange">
-            <option value="">全部类型</option>
+        <div class="flex gap-4 items-stretch">
+          <select
+            v-model="selectedType"
+            class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            @change="handleFilterChange"
+          >
             <option v-for="option in typeOptions" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
           </select>
 
-          <select v-model="selectedTimeRange" class="select select-bordered w-full max-w-xs"
-            @change="handleFilterChange">
-            <option value="">全部时间</option>
+          <select
+            v-model="selectedTimeRange"
+            class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            @change="handleFilterChange"
+          >
             <option v-for="option in timeRangeOptions" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
@@ -37,23 +51,31 @@
       </div>
 
       <!-- 历史记录列表 -->
-      <div class="history-list">
+      <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200">
         <!-- 批量操作头部 -->
-        <div class="list-header">
-          <div class="bulk-actions">
-            <div class="selection-info">
-              <label class="select-all">
-                <input type="checkbox" class="checkbox checkbox-primary" :checked="isAllSelected"
-                  @change="toggleSelectAll" />
+        <div class="p-6 bg-gray-50 border-b border-gray-200 rounded-t-2xl">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-4">
+              <label class="flex items-center cursor-pointer font-semibold text-gray-700">
+                <input
+                  type="checkbox"
+                  class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  :checked="isAllSelected"
+                  @change="toggleSelectAll"
+                />
                 <span class="ml-2">全选</span>
               </label>
-              <span v-if="selectedItems.size > 0" class="selected-count">
+              <span v-if="selectedItems.size > 0" class="text-blue-600 font-semibold">
                 已选择 {{ selectedItems.size }} 项
               </span>
             </div>
 
-            <div class="action-buttons">
-              <button @click="deleteSelected" :disabled="selectedItems.size === 0" class="delete-btn">
+            <div class="flex gap-4">
+              <button
+                @click="deleteSelected"
+                :disabled="selectedItems.size === 0"
+                class="bg-red-500 text-white border-0 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:bg-red-600 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16">
@@ -62,7 +84,11 @@
                 删除选中
               </button>
 
-              <button @click="exportSelected" :disabled="selectedItems.size === 0" class="export-btn">
+              <button
+                @click="exportSelected"
+                :disabled="selectedItems.size === 0"
+                class="bg-emerald-500 text-white border-0 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:bg-emerald-600 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -74,50 +100,61 @@
           </div>
         </div>
 
-        <div v-if="loading" class="loading-state">
-          <div class="loading-spinner"></div>
+        <div v-if="loading" class="flex flex-col items-center justify-center py-16 text-gray-500">
+          <div class="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
           <p>加载中...</p>
         </div>
 
-        <div v-else-if="historyData.length === 0" class="empty-state">
-          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-            </path>
+        <div v-else-if="filteredHistory.length === 0" class="flex flex-col items-center justify-center py-16 text-gray-500 text-center">
+          <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
-          <h3>暂无历史记录</h3>
+          <h3 class="text-lg font-semibold mb-2">暂无历史记录</h3>
           <p>您还没有进行过手写字识别，快去试试吧！</p>
         </div>
 
-        <div v-else class="history-items">
-          <motion.div v-for="(item, index) in paginatedHistory" :key="item.id" :initial="{ opacity: 0, y: 20 }"
-            :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3, delay: index * 0.1 }" class="history-item">
-            <div class="item-checkbox">
-              <input type="checkbox" class="checkbox checkbox-primary" :checked="selectedItems.has(item.id)"
-                @change="toggleItemSelection(item.id)" />
+        <div v-else class="p-4">
+          <motion.div
+            v-for="(item, index) in paginatedHistory"
+            :key="item.id"
+            :initial="{ opacity: 0, y: 20 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.3, delay: index * 0.1 }"
+            class="flex items-center gap-4 p-6 border-b border-gray-100 transition-all duration-300 hover:bg-gray-50 last:border-b-0"
+          >
+            <div class="flex-shrink-0">
+              <input
+                type="checkbox"
+                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                :checked="selectedItems.has(item.id)"
+                @change="toggleItemSelection(item.id)"
+              />
             </div>
 
-            <div class="item-preview">
-              <img v-if="item.image_url" :src="item.image_url" :alt="item.recognized_character" class="preview-image" />
-              <div v-else class="preview-placeholder">
-                <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                  </path>
+            <div class="flex-shrink-0 w-16 h-16">
+              <img v-if="item.image_url" :src="item.image_url" :alt="item.recognized_character" class="w-full h-full object-cover rounded-lg border-2 border-gray-200" />
+              <div v-else class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center border-2 border-gray-200">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
               </div>
             </div>
 
-            <div class="item-content">
-              <div class="item-header">
-                <h3 class="item-result">{{ item.recognized_character }}</h3>
-                <span class="item-type" :class="`type-${getDetectionTypeClass(item.detection_type)}`">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-4 mb-2">
+                <h3 class="text-xl font-semibold text-gray-800 m-0">{{ getCharacterFromPath(item.recognized_character) }}</h3>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold" :class="{
+                  'bg-blue-100 text-blue-800': getDetectionTypeClass(item.detection_type) === 'image',
+                  'bg-green-100 text-green-800': getDetectionTypeClass(item.detection_type) === 'camera',
+                  'bg-yellow-100 text-yellow-800': getDetectionTypeClass(item.detection_type) === 'handwriting',
+                  'bg-purple-100 text-purple-800': getDetectionTypeClass(item.detection_type) === 'video'
+                }">
                   {{ item.detection_type }}
                 </span>
               </div>
 
-              <div class="item-meta">
-                <span class="item-time">
+              <div class="flex gap-6 text-gray-500 text-sm">
+                <span class="flex items-center">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -125,7 +162,7 @@
                   {{ formatTime(item.detection_time) }}
                 </span>
 
-                <span class="item-confidence" v-if="item.confidence">
+                <span class="flex items-center" v-if="item.confidence">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -133,7 +170,7 @@
                   置信度: {{ (item.confidence * 100).toFixed(1) }}%
                 </span>
 
-                <span class="item-processing-time" v-if="item.processing_time">
+                <span class="flex items-center" v-if="item.processing_time">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -143,11 +180,15 @@
               </div>
 
               <!-- 候选字符列表 -->
-              <div v-if="item.candidates && item.candidates.length > 1" class="candidates-list">
-                <span class="candidates-label">候选字符:</span>
-                <div class="candidates">
-                  <span v-for="(candidate, index) in item.candidates.slice(0, 3)" :key="index" class="candidate-item">
-                    {{ candidate.character }} ({{ (candidate.confidence * 100).toFixed(1) }}%)
+              <div v-if="item.candidates && item.candidates.length > 1" class="mt-3">
+                <span class="text-sm text-gray-600 mr-2">候选字符:</span>
+                <div class="inline-flex gap-2">
+                  <span
+                    v-for="(candidate, index) in item.candidates.slice(0, 3)"
+                    :key="index"
+                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                  >
+                    {{ getCharacterFromPath(candidate.character) }} ({{ (candidate.confidence * 100).toFixed(1) }}%)
                   </span>
                 </div>
               </div>
@@ -177,21 +218,27 @@
       </div>
 
       <!-- 分页控件 -->
-      <div v-if="totalPages > 1" class="pagination">
-        <button @click="handlePageChange(Math.max(1, currentPage - 1))" :disabled="currentPage === 1"
-          class="pagination-btn">
+      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 mt-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+        <button
+          @click="handlePageChange(Math.max(1, currentPage - 1))"
+          :disabled="currentPage === 1"
+          class="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg bg-white text-gray-700 font-semibold cursor-pointer transition-all duration-300 hover:border-blue-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
           上一页
         </button>
 
-        <div class="pagination-info">
+        <div class="text-gray-600 font-semibold">
           <span>第 {{ currentPage }} 页，共 {{ totalPages }} 页 (总计 {{ totalCount }} 条记录)</span>
         </div>
 
-        <button @click="handlePageChange(Math.min(totalPages, currentPage + 1))" :disabled="currentPage === totalPages"
-          class="pagination-btn">
+        <button
+          @click="handlePageChange(Math.min(totalPages, currentPage + 1))"
+          :disabled="currentPage === totalPages"
+          class="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg bg-white text-gray-700 font-semibold cursor-pointer transition-all duration-300 hover:border-blue-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           下一页
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -203,30 +250,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { motion } from 'motion-v'
 import { getHistoryAPI } from '@/api/user/userApi'
 import type { HistoryQueryParams, HistoryRecord, HistoryData, HistoryResponse } from '@/types/apis/user_T'
 
 // 历史记录项接口 - 基于API类型定义
-interface HistoryItem {
-  id: number
-  character: string
-  confidence: number
-  recognition_time: string
-  image_path: string
-  session_id: string
-  type?: 'image' | 'camera' | 'handwriting' // 前端扩展字段
-}
+// interface HistoryItem {
+//   id: number
+//   character: string
+//   confidence: number
+//   recognition_time: string
+//   image_path: string
+//   session_id: string
+//   type?: 'image' | 'camera' | 'handwriting' // 前端扩展字段
+// }
 
 // 响应式数据
+const allHistoryData = ref<HistoryRecord[]>([]) // 存储所有数据
 const historyData = ref<HistoryRecord[]>([])
 const selectedItems = ref<Set<number>>(new Set())
 const currentPage = ref(1)
 const pageSize = ref(10)
 const searchQuery = ref('')
-const selectedType = ref('')
-const selectedTimeRange = ref('')
+const selectedType = ref('all')
+const selectedTimeRange = ref('all')
 const loading = ref(false)
 const totalCount = ref(0)
 const totalPages = ref(0)
@@ -234,9 +282,10 @@ const totalPages = ref(0)
 // 下拉框选项
 const typeOptions = [
   { label: '全部类型', value: 'all' },
-  { label: '图片检测', value: 'image' },
-  { label: '摄像头检测', value: 'camera' },
-  { label: '手写板', value: 'handwriting' }
+  { label: '图片识别', value: '图片识别' },
+  { label: '手写板识别', value: '手写板识别' },
+  { label: '视频识别', value: '视频识别' },
+  { label: '摄像头识别', value: '摄像头识别' }
 ]
 
 const timeRangeOptions = [
@@ -248,69 +297,102 @@ const timeRangeOptions = [
 
 
 
-// 计算属性
-const paginatedHistory = computed(() => historyData.value)
+// 计算属性 - 客户端筛选
+const filteredHistory = computed(() => {
+  let filtered = allHistoryData.value
+
+  // 搜索筛选
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.trim().toLowerCase()
+    filtered = filtered.filter(item => {
+      const character = getCharacterFromPath(item.recognized_character).toLowerCase()
+      return character.includes(query)
+    })
+  }
+
+  // 检测类型筛选
+  if (selectedType.value && selectedType.value !== 'all' && selectedType.value !== '') {
+    filtered = filtered.filter(item => {
+      return item.detection_type === selectedType.value
+    })
+  }
+
+  // 时间范围筛选
+  if (selectedTimeRange.value && selectedTimeRange.value !== 'all' && selectedTimeRange.value !== '') {
+    const now = new Date()
+    let startDate: Date
+
+    switch (selectedTimeRange.value) {
+      case 'today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        break
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        break
+      default:
+        startDate = new Date(0)
+    }
+
+    filtered = filtered.filter(item => {
+      const itemDate = new Date(item.detection_time)
+      return itemDate >= startDate && itemDate <= now
+    })
+  }
+
+  return filtered
+})
+
+const paginatedHistory = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredHistory.value.slice(start, end)
+})
 
 const isAllSelected = computed(() => {
   return paginatedHistory.value.length > 0 &&
-    paginatedHistory.value.every(item => selectedItems.value.has(item.id))
+         paginatedHistory.value.every(item => selectedItems.value.has(item.id))
 })
 
-// 加载历史数据
+// 更新总数和总页数
+const updatePagination = () => {
+  totalCount.value = filteredHistory.value.length
+  totalPages.value = Math.ceil(totalCount.value / pageSize.value)
+
+  // 如果当前页超出范围，重置到第一页
+  if (currentPage.value > totalPages.value && totalPages.value > 0) {
+    currentPage.value = 1
+  }
+}
+
+// 加载历史数据 - 只在初始化时加载所有数据
 const loadHistoryData = async () => {
   try {
     loading.value = true
 
+    // 获取所有数据，不传筛选参数
     const params: HistoryQueryParams = {
-      page: currentPage.value,
-      page_size: pageSize.value
-    }
-
-    // 添加搜索条件
-    if (searchQuery.value.trim()) {
-      params.character = searchQuery.value.trim()
-    }
-
-    // 添加时间范围筛选
-    if (selectedTimeRange.value) {
-      const now = new Date()
-      let startDate: Date
-
-      switch (selectedTimeRange.value) {
-        case 'today':
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-          break
-        case 'week':
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case 'month':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          break
-        default:
-          startDate = new Date(0)
-      }
-
-      params.start_date = startDate.toISOString().split('T')[0]
-      params.end_date = now.toISOString().split('T')[0]
+      page: 1,
+      page_size: 1000 // 获取大量数据，实际应用中可能需要分批获取
     }
 
     const response: HistoryResponse = await getHistoryAPI(params)
+    console.log("历史记录", response)
 
-
-    if (response.code === 200 && response.msg) {
-      historyData.value = response.msg.records
-      totalCount.value = response.msg.pagination.total_count
-      totalPages.value = response.msg.pagination.total_pages
-      currentPage.value = response.msg.pagination.current_page
+    if (response.success && response.data) {
+      allHistoryData.value = response.data.records || []
+      updatePagination()
     } else {
-      console.error('获取历史数据失败:', response.data)
-      historyData.value = []
+      console.error('获取历史数据失败:', response.message)
+      allHistoryData.value = []
       totalCount.value = 0
       totalPages.value = 0
     }
   } catch (error) {
     console.error('加载历史数据时出错:', error)
-    historyData.value = []
+    allHistoryData.value = []
     totalCount.value = 0
     totalPages.value = 0
   } finally {
@@ -323,18 +405,24 @@ const getDetectionTypeClass = (type: string) => {
   const typeMap: Record<string, string> = {
     '图片识别': 'image',
     '手写板识别': 'handwriting',
-    '摄像头识别': 'camera'
+    '摄像头识别': 'camera',
+    '视频识别': 'video'
   }
   return typeMap[type] || 'image'
 }
 
+// 从图片路径提取字符名称
+const getCharacterFromPath = (imagePath: string) => {
+  if (!imagePath) return '未知'
+  // 从路径如 "Img/img001-045.png" 提取文件名
+  const fileName = imagePath.split('/').pop() || ''
+  // 移除扩展名
+  return fileName.replace(/\.[^/.]+$/, '')
+}
+
 const getTypeLabel = (type: string) => {
-  const labels = {
-    image: '图片检测',
-    camera: '摄像头检测',
-    handwriting: '手写板'
-  }
-  return labels[type as keyof typeof labels] || type
+  // detection_type 现在直接是中文值，无需映射
+  return type || '未知类型'
 }
 
 const formatTime = (dateString: string) => {
@@ -394,7 +482,7 @@ const exportSelected = () => {
   const csvContent = [
     ['识别结果', '类型', '置信度', '创建时间', '处理时间'],
     ...selectedData.map(item => [
-      item.recognized_character,
+      getCharacterFromPath(item.recognized_character),
       item.detection_type,
       item.confidence ? `${(item.confidence * 100).toFixed(1)}%` : '',
       new Date(item.detection_time).toLocaleString('zh-CN'),
@@ -422,21 +510,25 @@ const deleteItem = (id: number) => {
   }
 }
 
-// 监听搜索和筛选条件变化
+// 监听搜索和筛选条件变化 - 客户端处理
 const handleSearch = () => {
   currentPage.value = 1
-  loadHistoryData()
+  updatePagination()
 }
 
 const handleFilterChange = () => {
   currentPage.value = 1
-  loadHistoryData()
+  updatePagination()
 }
 
 const handlePageChange = (page: number) => {
   currentPage.value = page
-  loadHistoryData()
 }
+
+// 监听筛选条件变化，自动更新分页
+watch([searchQuery, selectedType, selectedTimeRange], () => {
+  updatePagination()
+})
 
 // 组件挂载时加载数据
 onMounted(() => {
@@ -912,4 +1004,6 @@ onMounted(() => {
     gap: 1rem;
   }
 }
+<style scoped>
+/* 所有样式已替换为 Tailwind CSS 类名 */
 </style>

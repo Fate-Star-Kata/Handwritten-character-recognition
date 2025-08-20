@@ -14,15 +14,20 @@ export interface ImageDetectRequest {
 }
 
 export interface DetectionResult {
-  character: string
-  confidence: number
-  recognition_time: string
-  session_id: string
-  image_url?: string // 识别后的图片URL
-  record_id?: number // 记录ID
-  recognized_character?: string // 识别的字符（与character相同）
-  candidates?: CandidateCharacter[] // 候选字符列表
-  processing_time?: number // 处理时间（秒）
+  record_id: number // 记录ID
+  recognized_character: string // 识别的字符
+  confidence: number // 置信度
+  candidates: CandidateCharacter[] // 候选字符列表
+  processing_time: number // 处理时间（秒）
+  image_url: string // 识别后的图片URL
+}
+
+// WebSocket实时识别结果类型（匹配实际API响应）
+export interface WSDetectionResult {
+  character: string // 识别的字符（匹配响应示例.json）
+  confidence: number // 置信度
+  timestamp: string // 时间戳
+  session_id: string // 会话ID
 }
 
 export type ImageDetectResponse = ApiResponse<DetectionResult>
@@ -62,6 +67,7 @@ export interface HistoryQueryParams {
   page?: number
   page_size?: number
   character?: string
+  detection_type?: string
   start_date?: string // YYYY-MM-DD
   end_date?: string // YYYY-MM-DD
 }
@@ -102,12 +108,8 @@ export interface HistoryData {
   pagination: PaginationInfo
 }
 
-// 历史响应类型（匹配实际API响应格式）
-export interface HistoryResponse {
-  code: number
-  msg: HistoryData
-  data: string
-}
+// 历史响应类型（严格匹配实际API响应：success/message/data）
+export type HistoryResponse = ApiResponse<HistoryData>
 
 // 统计数据相关类型
 export interface StatisticsQueryParams {
@@ -133,54 +135,35 @@ export interface DailyStatDetail {
 
 // 实际API返回的统计数据结构
 export interface ActualStatisticsData {
-  total_detections: number
-  avg_accuracy: number
-  daily_stats: DailyStatDetail[]
+  total_detections: number;
+  avg_accuracy: number;
+  daily_stats: DailyStatDetail[];
   type_stats: {
-    detection_type: string
-    count: number
-    avg_conf: number
-  }[]
+    detection_type: string;
+    count: number;
+    avg_conf: number;
+  }[];
   char_stats: {
-    recognized_character: string
-    count: number
-    avg_conf: number
-  }[]
-  history?: HistoryRecord[] // 可选字段
+    recognized_character: string;
+    count: number;
+    avg_conf: number;
+  }[];
   date_range: {
-    start_date: string
-    end_date: string
-    days: number
-  }
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
 }
 
 // 实际API响应格式
 export interface ActualStatisticsResponse {
-  code: number
-  msg: ActualStatisticsData
-  data: string
+  code: number;
+  msg: ActualStatisticsData;
+  data: string;
 }
 
-// 前端使用的统计数据类型
-export interface StatisticsData {
-  total_recognitions: number
-  avg_confidence: number
-  most_recognized_character: string
-  recognition_accuracy: number
-  daily_stats: DailyStat[]
-  character_distribution: Record<string, number>
-  type_stats?: {
-    detection_type: string
-    count: number
-    avg_conf: number
-  }[]
-  char_stats?: {
-    recognized_character: string
-    count: number
-    avg_conf: number
-  }[]
-  history?: HistoryRecord[]
-}
+// 前端使用的统计数据类型（与实际API返回结构保持一致）
+export type StatisticsData = ActualStatisticsData;
 
 export type StatisticsResponse = ApiResponse<StatisticsData>
 

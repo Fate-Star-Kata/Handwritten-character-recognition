@@ -31,21 +31,7 @@
         @clear="clearResult" />
     </motion.div>
 
-    <!-- 检测结果 -->
-    <motion.div v-if="detectionResult" :initial="{ opacity: 0, scale: 0.9 }" :animate="{ opacity: 1, scale: 1 }"
-      :transition="{ duration: 0.5 }" class="result-section">
-      <h3 class="result-title">检测结果</h3>
-      <div class="result-content">
-        <div class="result-text">
-          <span class="result-label">识别文字：</span>
-          <span class="result-value">{{ detectionResult.text }}</span>
-        </div>
-        <div class="result-confidence">
-          <span class="result-label">置信度：</span>
-          <span class="result-value">{{ (detectionResult.confidence * 100).toFixed(1) }}%</span>
-        </div>
-      </div>
-    </motion.div>
+    
   </div>
 </template>
 
