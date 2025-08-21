@@ -1,48 +1,40 @@
 <template>
   <div class="min-h-screen bg-slate-50 p-8">
-    <motion.div
-      :initial="{ opacity: 0, y: 20 }"
-      :animate="{ opacity: 1, y: 0 }"
-      :transition="{ duration: 0.6 }"
-      class="max-w-6xl mx-auto"
-    >
+    <motion.div :initial="{ opacity: 0, y: 20 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.6 }"
+      class="max-w-6xl mx-auto">
       <!-- 页面标题 -->
       <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">检测历史</h1>
+        <h1
+          class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
+          检测历史</h1>
         <p class="text-gray-500 text-lg">查看和管理您的手写字识别历史记录</p>
       </div>
 
       <!-- 搜索和筛选区域 -->
       <div class="flex gap-4 mb-8 flex-wrap items-stretch bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div class="relative flex-1 min-w-[300px]">
-          <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" fill="none"
+            stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="搜索识别结果..."
+          <input v-model="searchQuery" type="text" placeholder="搜索识别结果..."
             class="w-full h-11 pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm transition-all duration-300 bg-gray-50 box-border focus:outline-none focus:border-blue-500 focus:shadow-blue-100 focus:shadow-[0_0_0_3px] focus:bg-white hover:bg-white hover:border-gray-400"
-            @input="handleSearch"
-          />
+            @input="handleSearch" />
         </div>
 
         <div class="flex gap-4 items-stretch">
-          <select
-            v-model="selectedType"
+          <select v-model="selectedType"
             class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            @change="handleFilterChange"
-          >
+            @change="handleFilterChange">
             <option v-for="option in typeOptions" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
           </select>
 
-          <select
-            v-model="selectedTimeRange"
+          <select v-model="selectedTimeRange"
             class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            @change="handleFilterChange"
-          >
+            @change="handleFilterChange">
             <option v-for="option in timeRangeOptions" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
@@ -57,12 +49,9 @@
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-4">
               <label class="flex items-center cursor-pointer font-semibold text-gray-700">
-                <input
-                  type="checkbox"
+                <input type="checkbox"
                   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  :checked="isAllSelected"
-                  @change="toggleSelectAll"
-                />
+                  :checked="isAllSelected" @change="toggleSelectAll" />
                 <span class="ml-2">全选</span>
               </label>
               <span v-if="selectedItems.size > 0" class="text-blue-600 font-semibold">
@@ -71,11 +60,8 @@
             </div>
 
             <div class="flex gap-4">
-              <button
-                @click="deleteSelected"
-                :disabled="selectedItems.size === 0"
-                class="bg-red-500 text-white border-0 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:bg-red-600 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button @click="deleteSelected" :disabled="selectedItems.size === 0"
+                class="bg-red-500 text-white border-0 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:bg-red-600 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16">
@@ -84,11 +70,8 @@
                 删除选中
               </button>
 
-              <button
-                @click="exportSelected"
-                :disabled="selectedItems.size === 0"
-                class="bg-emerald-500 text-white border-0 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:bg-emerald-600 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button @click="exportSelected" :disabled="selectedItems.size === 0"
+                class="bg-emerald-500 text-white border-0 rounded-lg px-6 py-3 font-semibold cursor-pointer transition-all duration-300 flex items-center hover:bg-emerald-600 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -105,44 +88,44 @@
           <p>加载中...</p>
         </div>
 
-        <div v-else-if="filteredHistory.length === 0" class="flex flex-col items-center justify-center py-16 text-gray-500 text-center">
+        <div v-else-if="filteredHistory.length === 0"
+          class="flex flex-col items-center justify-center py-16 text-gray-500 text-center">
           <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
           </svg>
           <h3 class="text-lg font-semibold mb-2">暂无历史记录</h3>
           <p>您还没有进行过手写字识别，快去试试吧！</p>
         </div>
 
         <div v-else class="p-4">
-          <motion.div
-            v-for="(item, index) in paginatedHistory"
-            :key="item.id"
-            :initial="{ opacity: 0, y: 20 }"
-            :animate="{ opacity: 1, y: 0 }"
-            :transition="{ duration: 0.3, delay: index * 0.1 }"
-            class="flex items-center gap-4 p-6 border-b border-gray-100 transition-all duration-300 hover:bg-gray-50 last:border-b-0"
-          >
+          <motion.div v-for="(item, index) in paginatedHistory" :key="item.id" :initial="{ opacity: 0, y: 20 }"
+            :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3, delay: index * 0.1 }"
+            class="flex items-center gap-4 p-6 border-b border-gray-100 transition-all duration-300 hover:bg-gray-50 last:border-b-0">
             <div class="flex-shrink-0">
-              <input
-                type="checkbox"
+              <input type="checkbox"
                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                :checked="selectedItems.has(item.id)"
-                @change="toggleItemSelection(item.id)"
-              />
+                :checked="selectedItems.has(item.id)" @change="toggleItemSelection(item.id)" />
             </div>
 
             <div class="flex-shrink-0 w-16 h-16">
-              <img v-if="item.image_url" :src="item.image_url" :alt="item.recognized_character" class="w-full h-full object-cover rounded-lg border-2 border-gray-200" />
-              <div v-else class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center border-2 border-gray-200">
+              <img v-if="item.image_url" :src="item.image_url" :alt="item.recognized_character"
+                class="w-full h-full object-cover rounded-lg border-2 border-gray-200" />
+              <div v-else
+                class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center border-2 border-gray-200">
                 <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                  </path>
                 </svg>
               </div>
             </div>
 
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-4 mb-2">
-                <h3 class="text-xl font-semibold text-gray-800 m-0">{{ getCharacterFromPath(item.recognized_character) }}</h3>
+                <h3 class="text-xl font-semibold text-gray-800 m-0">{{ getCharacterFromPath(item.recognized_character)
+                  }}</h3>
                 <span class="px-3 py-1 rounded-full text-xs font-semibold" :class="{
                   'bg-blue-100 text-blue-800': getDetectionTypeClass(item.detection_type) === 'image',
                   'bg-green-100 text-green-800': getDetectionTypeClass(item.detection_type) === 'camera',
@@ -183,11 +166,8 @@
               <div v-if="item.candidates && item.candidates.length > 1" class="mt-3">
                 <span class="text-sm text-gray-600 mr-2">候选字符:</span>
                 <div class="inline-flex gap-2">
-                  <span
-                    v-for="(candidate, index) in item.candidates.slice(0, 3)"
-                    :key="index"
-                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
-                  >
+                  <span v-for="(candidate, index) in item.candidates.slice(0, 3)" :key="index"
+                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
                     {{ getCharacterFromPath(candidate.character) }} ({{ (candidate.confidence * 100).toFixed(1) }}%)
                   </span>
                 </div>
@@ -218,12 +198,10 @@
       </div>
 
       <!-- 分页控件 -->
-      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 mt-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
-        <button
-          @click="handlePageChange(Math.max(1, currentPage - 1))"
-          :disabled="currentPage === 1"
-          class="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg bg-white text-gray-700 font-semibold cursor-pointer transition-all duration-300 hover:border-blue-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+      <div v-if="totalPages > 1"
+        class="flex justify-center items-center gap-4 mt-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+        <button @click="handlePageChange(Math.max(1, currentPage - 1))" :disabled="currentPage === 1"
+          class="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg bg-white text-gray-700 font-semibold cursor-pointer transition-all duration-300 hover:border-blue-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
@@ -234,11 +212,8 @@
           <span>第 {{ currentPage }} 页，共 {{ totalPages }} 页 (总计 {{ totalCount }} 条记录)</span>
         </div>
 
-        <button
-          @click="handlePageChange(Math.min(totalPages, currentPage + 1))"
-          :disabled="currentPage === totalPages"
-          class="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg bg-white text-gray-700 font-semibold cursor-pointer transition-all duration-300 hover:border-blue-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <button @click="handlePageChange(Math.min(totalPages, currentPage + 1))" :disabled="currentPage === totalPages"
+          class="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg bg-white text-gray-700 font-semibold cursor-pointer transition-all duration-300 hover:border-blue-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
           下一页
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -353,7 +328,7 @@ const paginatedHistory = computed(() => {
 
 const isAllSelected = computed(() => {
   return paginatedHistory.value.length > 0 &&
-         paginatedHistory.value.every(item => selectedItems.value.has(item.id))
+    paginatedHistory.value.every(item => selectedItems.value.has(item.id))
 })
 
 // 更新总数和总页数

@@ -11,11 +11,7 @@
           </div>
           <Motion :initial="{ opacity: 0, x: 20 }" :animate="{ opacity: 1, x: 0 }" :whileHover="{ scale: 1.05 }"
             :transition="{ duration: 0.3, delay: 0.2 }">
-            <div class="flex gap-2">
-              <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
-                end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" @change="updateCharts" />
-              <el-button type="primary" :icon="Refresh" @click="refreshData" :loading="loading">刷新数据</el-button>
-            </div>
+            <el-button type="primary" :icon="Refresh" :loading="loading" circle @click="refreshData" />
           </Motion>
         </div>
       </el-card>
@@ -257,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import { Motion } from 'motion-v'
 import { ElMessage } from 'element-plus'
 import {
@@ -311,7 +307,6 @@ const cardVariants = {
 }
 
 // 响应式数据
-const dateRange = ref<string[]>([])
 const trendPeriod = ref('30d')
 const loading = ref(false)
 const statisticsData = ref<StatisticsData | null>(null)
@@ -741,28 +736,7 @@ const getPeriodFromTrendPeriod = (trend: string): StatisticsPeriod => {
   }
 }
 
-// 更新图表
-const updateCharts = async () => {
-  if (dateRange.value && dateRange.value.length === 2) {
-    ElMessage.info('正在更新图表数据...')
-    loading.value = true
 
-    try {
-      // 可以根据日期范围获取特定时间段的数据
-      await refreshData()
-
-      // 更新所有图表数据
-      updateTrendChartData()
-      updateAccuracyChartData()
-      updateCharacterTypeChartData()
-      updateHeatmapChartData()
-    } catch (error) {
-      console.error('更新图表失败:', error)
-    } finally {
-      loading.value = false
-    }
-  }
-}
 
 // 更新趋势图表
 const updateTrendChart = async () => {
@@ -805,16 +779,6 @@ const formatFileSize = (bytes: number) => {
 
 // 组件挂载
 onMounted(async () => {
-  // 设置默认日期范围为最近30天
-  const endDate = new Date()
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 30)
-
-  dateRange.value = [
-    startDate.toISOString().split('T')[0],
-    endDate.toISOString().split('T')[0]
-  ]
-
   // 获取初始数据
   await fetchStatisticsData('month')
 
